@@ -3,16 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Cash Count - TillCheck</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-    <h1>Cash Count</h1>
+    <main class="container">
 
-    <p>Enter the physical cash currently in the register.</p>
+        <header class="page-header">
+            <h1>Cash Count</h1>
+            <p>Enter the physical cash currently in the register.</p>
+        </header>
 
-    <a href="/">Back</a>
+        <section class="cash-count-card">
+
+            <h2>Denominations</h2>
+
+            <div class="denomination-list">
+
+                <div class="denomination-row">
+                    <label for="denom-1000">₱1,000</label>
+
+                    <input
+                        type="number"
+                        id="denom-1000"
+                        class="denomination-input"
+                        data-value="1000"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-1000">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-500">₱500</label>
+
+                    <input
+                        type="number"
+                        id="denom-500"
+                        class="denomination-input"
+                        data-value="500"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-500">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-200">₱200</label>
+
+                    <input
+                        type="number"
+                        id="denom-200"
+                        class="denomination-input"
+                        data-value="200"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-200">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-100">₱100</label>
+
+                    <input
+                        type="number"
+                        id="denom-100"
+                        class="denomination-input"
+                        data-value="100"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-100">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-50">₱50</label>
+
+                    <input
+                        type="number"
+                        id="denom-50"
+                        class="denomination-input"
+                        data-value="50"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-50">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-20">₱20</label>
+
+                    <input
+                        type="number"
+                        id="denom-20"
+                        class="denomination-input"
+                        data-value="20"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-20">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-10">₱10</label>
+
+                    <input
+                        type="number"
+                        id="denom-10"
+                        class="denomination-input"
+                        data-value="10"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-10">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-5">₱5</label>
+
+                    <input
+                        type="number"
+                        id="denom-5"
+                        class="denomination-input"
+                        data-value="5"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-5">
+                        ₱0.00
+                    </span>
+                </div>
+
+                <div class="denomination-row">
+                    <label for="denom-1">₱1</label>
+
+                    <input
+                        type="number"
+                        id="denom-1"
+                        class="denomination-input"
+                        data-value="1"
+                        min="0"
+                        value="0"
+                    >
+
+                    <span class="subtotal" id="subtotal-1">
+                        ₱0.00
+                    </span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="total-card">
+
+            <h2>Actual Cash</h2>
+
+            <p id="actual-cash">₱0.00</p>
+
+        </section>
+
+
+        <section class="expected-card">
+
+            <h2>Expected Cash</h2>
+
+            <label for="expected-cash-input">
+                Enter the amount expected in the register.
+            </label>
+
+            <input
+                type="number"
+                id="expected-cash-input"
+                min="0"
+                step="0.01"
+                value="0"
+            >
+
+        </section>
+
+
+        <section class="difference-card">
+
+            <h2>Difference</h2>
+
+            <p id="difference">₱0.00</p>
+
+            <p id="difference-status">No difference</p>
+
+        </section>
+
+    </main>
+
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
 </html>

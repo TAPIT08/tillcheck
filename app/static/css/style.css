@@ -1,0 +1,111 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    color: #222;
+}
+
+.container {
+    width: min(900px, 100%);
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    margin: 0;
+    color: #666;
+}
+
+.cash-count-card,
+.total-card,
+.expected-card,
+.difference-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cash-count-card h2,
+.total-card h2,
+.expected-card h2,
+.difference-card h2 {
+    margin-top: 0;
+}
+
+.denomination-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.denomination-row {
+    display: grid;
+    grid-template-columns: 120px 120px 1fr;
+    align-items: center;
+    gap: 16px;
+}
+
+.denomination-row label {
+    font-weight: bold;
+}
+
+.denomination-input,
+#expected-cash-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.subtotal {
+    text-align: right;
+    font-weight: bold;
+}
+
+#actual-cash {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0;
+}
+
+#difference {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0 0 8px;
+}
+
+#difference-status {
+    margin: 0;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+
+    .container {
+        padding: 16px;
+    }
+
+    .denomination-row {
+        grid-template-columns: 80px 100px 1fr;
+        gap: 8px;
+    }
+
+    .subtotal {
+        font-size: 14px;
+    }
+}
