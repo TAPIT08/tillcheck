@@ -245,6 +245,27 @@
 
             <div class="expected-input-group">
 
+                <label for="starting-cash-source">
+                    Starting Cash Source
+                </label>
+
+                <select id="starting-cash-source">
+
+                    <option value="manual">
+                        Manual Entry
+                    </option>
+
+                    <option value="previous-shift">
+                        Previous Shift
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="expected-input-group">
+
                 <label for="starting-cash-input">
                     Starting Cash
                 </label>
@@ -256,6 +277,14 @@
                     step="0.01"
                     value="4000"
                 >
+
+                <p
+                    id="starting-cash-note"
+                    class="calculation-note"
+                >
+                    Enter the amount that should be in the register
+                    at the beginning of the shift.
+                </p>
 
             </div>
 
@@ -436,8 +465,35 @@
                 Remit + Remaining = Actual Cash
             </p>
 
-        </section>
 
+            <div class="transfer-summary">
+
+                <h3>Shift Transfer</h3>
+
+                <div class="transfer-row">
+
+                    <span>Amount Remaining</span>
+
+                    <strong id="transfer-remaining">
+                        ₱0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="transfer-row">
+
+                    <span>Amount Remitted</span>
+
+                    <strong id="transfer-remit">
+                        ₱0.00
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
 
         <section class="difference-card">
 

@@ -17,6 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const salesCashInput = document.getElementById("sales-cash-input");
 
+  const startingCashSourceInput = document.getElementById(
+    "starting-cash-source",
+  );
+
+  const startingCashNote = document.getElementById("starting-cash-note");
   // -----------------------------
   // Cash Displays
   // -----------------------------
@@ -154,10 +159,18 @@ document.addEventListener("DOMContentLoaded", () => {
       remitValidation.textContent =
         "Remaining cash is greater than actual cash.";
 
+      transferRemainingDisplay.textContent = formatCurrency(remainingCash);
+
+      transferRemitDisplay.textContent = "Not available";
+
       return;
     }
 
     remitDisplay.textContent = formatCurrency(remit);
+
+    transferRemainingDisplay.textContent = formatCurrency(remainingCash);
+
+    transferRemitDisplay.textContent = formatCurrency(remit);
 
     const verifiedTotal = remit + remainingCash;
 
@@ -296,7 +309,23 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+  // -----------------------------
+  // Cash Source Behvior
+  // -----------------------------
 
+  function updateStartingCashSource() {
+    const source = startingCashSourceInput.value;
+
+    if (source === "previous-shift") {
+      startingCashNote.textContent =
+        "Previous Shift will use the transferred " +
+        "remaining cash from the previous shift.";
+    } else {
+      startingCashNote.textContent =
+        "Enter the amount that should be in the " +
+        "register at the beginning of the shift.";
+    }
+  }
   // -----------------------------
   // Event Listeners
   // -----------------------------
@@ -312,7 +341,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   addMovementButton.addEventListener("click", addMovement);
-
+  startingCashSourceInput.addEventListener("change", updateStartingCashSource);
+  updateStartingCashSource();
   // -----------------------------
   // Initial Calculation
   // -----------------------------
