@@ -245,3 +245,41 @@ body {
     gap: 6px;
   }
 }
+
+.expected-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.expected-input-group label {
+  font-weight: bold;
+}
+
+.expected-input-group input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.expected-summary {
+  margin-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.expected-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.expected-total {
+  font-size: 20px;
+  font-weight: bold;
+}

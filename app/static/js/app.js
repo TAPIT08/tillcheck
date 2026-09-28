@@ -1,11 +1,35 @@
 document.addEventListener("DOMContentLoaded", () => {
   let cashMovements = [];
 
+  // -----------------------------
+  // Denominations
+  // -----------------------------
+
   const denominationInputs = document.querySelectorAll(".denomination-input");
 
-  const expectedCashInput = document.getElementById("expected-cash-input");
+  // -----------------------------
+  // Cash Inputs
+  // -----------------------------
 
   const remainingCashInput = document.getElementById("remaining-cash-input");
+
+  const startingCashInput = document.getElementById("starting-cash-input");
+
+  const salesCashInput = document.getElementById("sales-cash-input");
+
+  // -----------------------------
+  // Cash Displays
+  // -----------------------------
+
+  const startingCashDisplay = document.getElementById("starting-cash-display");
+
+  const salesCashDisplay = document.getElementById("sales-cash-display");
+
+  const cashInDisplay = document.getElementById("cash-in-display");
+
+  const cashOutDisplay = document.getElementById("cash-out-display");
+
+  const expectedCashDisplay = document.getElementById("expected-cash-display");
 
   const remitDisplay = document.getElementById("remit-amount");
 
@@ -17,6 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const remitValidation = document.getElementById("remit-validation");
 
+  // -----------------------------
+  // Cash Movement Inputs
+  // -----------------------------
+
   const movementTypeInput = document.getElementById("movement-type");
 
   const movementAmountInput = document.getElementById("movement-amount");
@@ -27,6 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const movementList = document.getElementById("movement-list");
 
+  // -----------------------------
+  // Currency Formatting
+  // -----------------------------
+
   function formatCurrency(amount) {
     return new Intl.NumberFormat("en-PH", {
       style: "currency",
@@ -34,7 +66,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }).format(amount);
   }
 
-  function calculateCash() {
+  // -----------------------------
+  // Calculate Actual Cash
+  // -----------------------------
+
+  function calculateActualCash() {
     let actualCash = 0;
 
     denominationInputs.forEach((input) => {
@@ -42,26 +78,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const quantity = Number(input.value) || 0;
 
-      const subtotal = denomination * quantity;
-
-      actualCash += subtotal;
-
-      const subtotalElement = document.getElementById(
-        `subtotal-${denomination}`,
-      );
-
-      subtotalElement.textContent = formatCurrency(subtotal);
+      actualCash += denomination * quantity;
     });
 
-    actualCashDisplay.textContent = formatCurrency(actualCash);
-
-    calculateDifference(actualCash);
-
-    calculateRemit(actualCash);
+    return actualCash;
   }
 
-  function calculateDifference(actualCash) {
-    const expectedCash = Number(expectedCashInput.value) || 0;
+  // -----------------------------
+  // Calculate Difference
+  // -----------------------------
+
+  function calculateDifference(expectedCash) {
+    const actualCash = calculateActualCash();
 
     const difference = actualCash - expectedCash;
 
@@ -75,6 +103,45 @@ document.addEventListener("DOMContentLoaded", () => {
       differenceStatus.textContent = "Overage";
     }
   }
+
+  // -----------------------------
+  // Calculate Expected Cash
+  // -----------------------------
+
+  function calculateExpectedCash() {
+    const startingCash = Number(startingCashInput.value) || 0;
+
+    const salesCash = Number(salesCashInput.value) || 0;
+
+    let cashIn = 0;
+    let cashOut = 0;
+
+    cashMovements.forEach((movement) => {
+      if (movement.type === "in") {
+        cashIn += movement.amount;
+      } else if (movement.type === "out") {
+        cashOut += movement.amount;
+      }
+    });
+
+    const expectedCash = startingCash + salesCash + cashIn - cashOut;
+
+    startingCashDisplay.textContent = formatCurrency(startingCash);
+
+    salesCashDisplay.textContent = formatCurrency(salesCash);
+
+    cashInDisplay.textContent = formatCurrency(cashIn);
+
+    cashOutDisplay.textContent = formatCurrency(cashOut);
+
+    expectedCashDisplay.textContent = formatCurrency(expectedCash);
+
+    calculateDifference(expectedCash);
+  }
+
+  // -----------------------------
+  // Calculate Remit
+  // -----------------------------
 
   function calculateRemit(actualCash) {
     const remainingCash = Number(remainingCashInput.value) || 0;
@@ -101,6 +168,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // -----------------------------
+  // Calculate Everything
+  // -----------------------------
+
+  function calculateCash() {
+    let actualCash = 0;
+
+    denominationInputs.forEach((input) => {
+      const denomination = Number(input.dataset.value);
+
+      const quantity = Number(input.value) || 0;
+
+      const subtotal = denomination * quantity;
+
+      actualCash += subtotal;
+
+      const subtotalElement = document.getElementById(
+        `subtotal-${denomination}`,
+      );
+
+      if (subtotalElement) {
+        subtotalElement.textContent = formatCurrency(subtotal);
+      }
+    });
+
+    actualCashDisplay.textContent = formatCurrency(actualCash);
+
+    calculateExpectedCash();
+
+    calculateRemit(actualCash);
+  }
+
+  // -----------------------------
+  // Add Cash Movement
+  // -----------------------------
+
   function addMovement() {
     const type = movementTypeInput.value;
 
@@ -110,21 +213,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!amount || amount <= 0) {
       alert("Please enter a valid amount.");
-
       return;
     }
 
     if (!reason) {
       alert("Please enter a reason.");
-
       return;
     }
 
     const movement = {
       type: type,
-
       amount: amount,
-
       reason: reason,
     };
 
@@ -133,17 +232,20 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMovements();
 
     movementAmountInput.value = "";
-
     movementReasonInput.value = "";
 
     calculateCash();
   }
 
+  // -----------------------------
+  // Display Cash Movements
+  // -----------------------------
+
   function renderMovements() {
     movementList.innerHTML = "";
 
     if (cashMovements.length === 0) {
-      movementList.innerHTML = `<p>No cash movements recorded.</p>`;
+      movementList.innerHTML = "<p>No cash movements recorded.</p>";
 
       return;
     }
@@ -158,26 +260,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const sign = movement.type === "out" ? "-" : "+";
 
       movementElement.innerHTML = `
-        <span class="movement-type">
-          ${typeText}
-        </span>
+          <span class="movement-type">
+            ${typeText}
+          </span>
 
-        <span class="movement-amount">
-          ${sign}${formatCurrency(movement.amount)}
-        </span>
+          <span class="movement-amount">
+            ${sign}${formatCurrency(movement.amount)}
+          </span>
 
-        <span class="movement-reason">
-          ${movement.reason}
-        </span>
+          <span class="movement-reason">
+            ${movement.reason}
+          </span>
 
-        <button
-          type="button"
-          class="remove-movement-button"
-          data-index="${index}"
-        >
-          ×
-        </button>
-      `;
+          <button
+            type="button"
+            class="remove-movement-button"
+            data-index="${index}"
+          >
+            ×
+          </button>
+        `;
 
       movementList.appendChild(movementElement);
     });
@@ -195,7 +297,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  expectedCashInput.addEventListener("input", calculateCash);
+  // -----------------------------
+  // Event Listeners
+  // -----------------------------
+
+  startingCashInput.addEventListener("input", calculateCash);
+
+  salesCashInput.addEventListener("input", calculateCash);
 
   remainingCashInput.addEventListener("input", calculateCash);
 
@@ -204,6 +312,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   addMovementButton.addEventListener("click", addMovement);
+
+  // -----------------------------
+  // Initial Calculation
+  // -----------------------------
 
   calculateCash();
 });
