@@ -152,3 +152,96 @@ body {
   color: #666;
   margin-bottom: 0;
 }
+
+.cash-movement-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cash-movement-card h2 {
+  margin-top: 0;
+}
+
+.section-description {
+  color: #666;
+}
+
+.movement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.movement-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.movement-field label {
+  font-weight: bold;
+}
+
+.movement-field input,
+.movement-field select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+#add-movement-button {
+  width: fit-content;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.movement-list-container {
+  margin-top: 24px;
+}
+
+.movement-list-container h3 {
+  margin-bottom: 12px;
+}
+
+.movement-item {
+  display: grid;
+  grid-template-columns: 100px 120px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.movement-type {
+  font-weight: bold;
+}
+
+.movement-amount {
+  font-weight: bold;
+}
+
+.movement-reason {
+  color: #666;
+}
+
+.remove-movement-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+@media (max-width: 600px) {
+  .movement-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

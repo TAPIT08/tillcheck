@@ -257,7 +257,95 @@
 
         </section>
 
+        <section class="cash-movement-card">
 
+            <h2>Cash Movements</h2>
+
+            <p class="section-description">
+                Record money added to or removed from the register.
+            </p>
+
+
+            <div class="movement-form">
+
+                <div class="movement-field">
+
+                    <label for="movement-type">
+                        Type
+                    </label>
+
+                    <select id="movement-type">
+
+                        <option value="out">
+                            Cash Out
+                        </option>
+
+                        <option value="in">
+                            Cash In
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="movement-field">
+
+                    <label for="movement-amount">
+                        Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        id="movement-amount"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+                <div class="movement-field">
+
+                    <label for="movement-reason">
+                        Reason
+                    </label>
+
+                    <input
+                        type="text"
+                        id="movement-reason"
+                        placeholder="e.g. Kitchen purchase"
+                    >
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="add-movement-button"
+                >
+                    Add Movement
+                </button>
+
+            </div>
+
+
+            <div class="movement-list-container">
+
+                <h3>Recorded Movements</h3>
+
+                <div id="movement-list">
+
+                    <p id="no-movements">
+                        No cash movements recorded.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
         <section class="remaining-card">
 
             <h2>Remaining Cash</h2>

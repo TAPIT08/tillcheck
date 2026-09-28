@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+  let cashMovements = [];
+
   const denominationInputs = document.querySelectorAll(".denomination-input");
 
   const expectedCashInput = document.getElementById("expected-cash-input");
@@ -14,6 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const differenceStatus = document.getElementById("difference-status");
 
   const remitValidation = document.getElementById("remit-validation");
+
+  const movementTypeInput = document.getElementById("movement-type");
+
+  const movementAmountInput = document.getElementById("movement-amount");
+
+  const movementReasonInput = document.getElementById("movement-reason");
+
+  const addMovementButton = document.getElementById("add-movement-button");
+
+  const movementList = document.getElementById("movement-list");
 
   function formatCurrency(amount) {
     return new Intl.NumberFormat("en-PH", {
@@ -89,6 +101,100 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function addMovement() {
+    const type = movementTypeInput.value;
+
+    const amount = Number(movementAmountInput.value);
+
+    const reason = movementReasonInput.value.trim();
+
+    if (!amount || amount <= 0) {
+      alert("Please enter a valid amount.");
+
+      return;
+    }
+
+    if (!reason) {
+      alert("Please enter a reason.");
+
+      return;
+    }
+
+    const movement = {
+      type: type,
+
+      amount: amount,
+
+      reason: reason,
+    };
+
+    cashMovements.push(movement);
+
+    renderMovements();
+
+    movementAmountInput.value = "";
+
+    movementReasonInput.value = "";
+
+    calculateCash();
+  }
+
+  function renderMovements() {
+    movementList.innerHTML = "";
+
+    if (cashMovements.length === 0) {
+      movementList.innerHTML = `<p>No cash movements recorded.</p>`;
+
+      return;
+    }
+
+    cashMovements.forEach((movement, index) => {
+      const movementElement = document.createElement("div");
+
+      movementElement.className = "movement-item";
+
+      const typeText = movement.type === "out" ? "Cash Out" : "Cash In";
+
+      const sign = movement.type === "out" ? "-" : "+";
+
+      movementElement.innerHTML = `
+        <span class="movement-type">
+          ${typeText}
+        </span>
+
+        <span class="movement-amount">
+          ${sign}${formatCurrency(movement.amount)}
+        </span>
+
+        <span class="movement-reason">
+          ${movement.reason}
+        </span>
+
+        <button
+          type="button"
+          class="remove-movement-button"
+          data-index="${index}"
+        >
+          ×
+        </button>
+      `;
+
+      movementList.appendChild(movementElement);
+    });
+
+    document.querySelectorAll(".remove-movement-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.index);
+
+        cashMovements.splice(index, 1);
+
+        renderMovements();
+
+        calculateCash();
+      });
+    });
+  }
+
   expectedCashInput.addEventListener("input", calculateCash);
 
   remainingCashInput.addEventListener("input", calculateCash);
@@ -96,6 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
   denominationInputs.forEach((input) => {
     input.addEventListener("input", calculateCash);
   });
+
+  addMovementButton.addEventListener("click", addMovement);
 
   calculateCash();
 });
