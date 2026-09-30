@@ -206,3 +206,38 @@ def save_cash_count():
     finally:
 
         connection.close()
+        
+
+@main.route("/cash-counts")
+def cash_counts():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cash_counts = cursor.execute(
+        """
+        SELECT
+            id,
+            count_type,
+            starting_cash,
+            cash_sales,
+            cash_in,
+            cash_out,
+            expected_cash,
+            actual_cash,
+            remaining_cash,
+            remit,
+            difference,
+            created_at
+        FROM cash_counts
+        ORDER BY id DESC
+        """
+    ).fetchall()
+
+    connection.close()
+
+    return render_template(
+        "cash_counts.html",
+        cash_counts=cash_counts
+    )

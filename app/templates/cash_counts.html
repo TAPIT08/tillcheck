@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Cash Count History - TillCheck</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="page-header">
+
+            <h1>Cash Count History</h1>
+
+            <p>
+                Saved cash count records.
+            </p>
+
+        </header>
+
+        <section class="history-section">
+
+            {% if cash_counts %}
+
+                {% for count in cash_counts %}
+
+                    <article class="history-card">
+
+                        <div class="history-header">
+
+                            <h2>
+                                Cash Count #{{ count["id"] }}
+                            </h2>
+
+                            <span>
+                                {{ count["created_at"] }}
+                            </span>
+
+                        </div>
+
+                        <div class="history-details">
+
+                            <div>
+                                <strong>Count Type</strong>
+                                <span>
+                                    {{ count["count_type"] }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Starting Cash</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["starting_cash"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Cash Sales</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["cash_sales"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Cash In</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["cash_in"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Cash Out</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["cash_out"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Expected Cash</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["expected_cash"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Actual Cash</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["actual_cash"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Remaining Cash</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["remaining_cash"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Remit</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["remit"]) }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>Difference</strong>
+                                <span>
+                                    ₱{{ "%.2f"|format(count["difference"]) }}
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>
+                    No cash count records found.
+                </p>
+
+            {% endif %}
+
+        </section>
+
+        <p>
+            <a href="{{ url_for('main.cash_count') }}">
+                ← Back to Cash Count
+            </a>
+        </p>
+
+    </main>
+
+</body>
+
+</html>
