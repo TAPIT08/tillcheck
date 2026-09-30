@@ -32,3 +32,6 @@ htmlcov/
 
 # Flask
 instance/
+
+# Database
+database/*.db
