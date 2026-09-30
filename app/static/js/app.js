@@ -61,6 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const movementList = document.getElementById("movement-list");
 
   // -----------------------------
+  // Save Cash Count
+  // -----------------------------
+
+  const saveCashCountButton = document.getElementById("save-cash-count-button");
+
+  const saveStatus = document.getElementById("save-status");
+
+  // -----------------------------
   // Currency Formatting
   // -----------------------------
 
@@ -214,6 +222,115 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
+  // Save Cash Count
+  // -----------------------------
+
+  async function saveCashCount() {
+    const actualCash = calculateActualCash();
+
+    const startingCash = Number(startingCashInput.value) || 0;
+
+    const salesCash = Number(salesCashInput.value) || 0;
+
+    let cashIn = 0;
+    let cashOut = 0;
+
+    cashMovements.forEach((movement) => {
+      if (movement.type === "in") {
+        cashIn += movement.amount;
+      }
+
+      if (movement.type === "out") {
+        cashOut += movement.amount;
+      }
+    });
+
+    const expectedCash = startingCash + salesCash + cashIn - cashOut;
+
+    const remainingCash = Number(remainingCashInput.value) || 0;
+
+    const remit = actualCash - remainingCash;
+
+    const difference = actualCash - expectedCash;
+
+    const countType = document.querySelector(
+      'input[name="count-type"]:checked',
+    );
+
+    const denominations = [];
+
+    denominationInputs.forEach((input) => {
+      const denomination = Number(input.dataset.value);
+
+      const quantity = Number(input.value) || 0;
+
+      const subtotal = denomination * quantity;
+
+      denominations.push({
+        denomination: denomination,
+
+        quantity: quantity,
+
+        subtotal: subtotal,
+      });
+    });
+
+    const data = {
+      shift_id: null,
+
+      count_type: countType ? countType.value : "manual",
+
+      starting_cash: startingCash,
+
+      cash_sales: salesCash,
+
+      cash_in: cashIn,
+
+      cash_out: cashOut,
+
+      expected_cash: expectedCash,
+
+      actual_cash: actualCash,
+
+      remaining_cash: remainingCash,
+
+      remit: remit,
+
+      difference: difference,
+
+      denominations: denominations,
+
+      movements: cashMovements,
+    };
+
+    saveStatus.textContent = "Saving...";
+
+    try {
+      const response = await fetch("/save-cash-count", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        saveStatus.textContent = "✓ Cash count saved successfully.";
+      } else {
+        saveStatus.textContent = "⚠ " + result.message;
+      }
+    } catch (error) {
+      console.error(error);
+
+      saveStatus.textContent = "⚠ Could not save cash count.";
+    }
+  }
+
+  // -----------------------------
   // Add Cash Movement
   // -----------------------------
 
@@ -341,6 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   addMovementButton.addEventListener("click", addMovement);
+  saveCashCountButton.addEventListener("click", saveCashCount);
   startingCashSourceInput.addEventListener("change", updateStartingCashSource);
   updateStartingCashSource();
   // -----------------------------
