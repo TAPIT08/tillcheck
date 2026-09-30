@@ -28,12 +28,68 @@ def initialize_database():
 
     cursor = connection.cursor()
 
+    # --------------------------------------------------
+    # USERS
+    # --------------------------------------------------
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            name TEXT NOT NULL,
+
+            role TEXT NOT NULL DEFAULT 'staff',
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+        )
+        """
+    )
+
+    # --------------------------------------------------
+    # SHIFTS
+    # --------------------------------------------------
 
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS shifts (
 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            user_id INTEGER,
+
+            register_id INTEGER,
+
+            shift_name TEXT,
+
+            started_at TIMESTAMP,
+
+            ended_at TIMESTAMP,
+
+            status TEXT NOT NULL DEFAULT 'open',
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
+
+        )
+        """
+    )
+
+    # --------------------------------------------------
+    # CASH COUNTS
+    # --------------------------------------------------
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cash_counts (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            shift_id INTEGER,
 
             count_type TEXT NOT NULL,
 
@@ -55,12 +111,66 @@ def initialize_database():
 
             difference REAL NOT NULL DEFAULT 0,
 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (shift_id)
+                REFERENCES shifts(id)
 
         )
         """
     )
 
+    # --------------------------------------------------
+    # CASH DENOMINATIONS
+    # --------------------------------------------------
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cash_denominations (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            cash_count_id INTEGER NOT NULL,
+
+            denomination REAL NOT NULL,
+
+            quantity INTEGER NOT NULL DEFAULT 0,
+
+            subtotal REAL NOT NULL DEFAULT 0,
+
+            FOREIGN KEY (cash_count_id)
+                REFERENCES cash_counts(id)
+
+        )
+        """
+    )
+
+    # --------------------------------------------------
+    # CASH MOVEMENTS
+    # --------------------------------------------------
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cash_movements (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            cash_count_id INTEGER NOT NULL,
+
+            movement_type TEXT NOT NULL,
+
+            amount REAL NOT NULL,
+
+            reason TEXT NOT NULL,
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (cash_count_id)
+                REFERENCES cash_counts(id)
+
+        )
+        """
+    )
 
     connection.commit()
 
