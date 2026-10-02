@@ -241,3 +241,61 @@ def cash_counts():
         "cash_counts.html",
         cash_counts=cash_counts
     )
+
+@main.route("/cash-count/<int:cash_count_id>")
+def cash_count_detail(cash_count_id):
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cash_count = cursor.execute(
+        """
+        SELECT *
+        FROM cash_counts
+        WHERE id = ?
+        """,
+        (cash_count_id,)
+    ).fetchone()
+
+    if cash_count is None:
+
+        connection.close()
+
+        return "Cash count not found.", 404
+
+    denominations = cursor.execute(
+        """
+        SELECT
+            denomination,
+            quantity,
+            subtotal
+        FROM cash_denominations
+        WHERE cash_count_id = ?
+        ORDER BY denomination DESC
+        """,
+        (cash_count_id,)
+    ).fetchall()
+
+    movements = cursor.execute(
+        """
+        SELECT
+            movement_type,
+            amount,
+            reason,
+            created_at
+        FROM cash_movements
+        WHERE cash_count_id = ?
+        ORDER BY id
+        """,
+        (cash_count_id,)
+    ).fetchall()
+
+    connection.close()
+
+    return render_template(
+        "cash_count_detail.html",
+        cash_count=cash_count,
+        denominations=denominations,
+        movements=movements
+    )

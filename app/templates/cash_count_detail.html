@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Cash Count #{{ cash_count["id"] }} - TillCheck
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="page-header">
+
+            <h1>
+                Cash Count #{{ cash_count["id"] }}
+            </h1>
+
+            <p>
+                {{ cash_count["created_at"] }}
+            </p>
+
+        </header>
+
+
+        <!-- Count Information -->
+
+        <section class="card">
+
+            <h2>Count Information</h2>
+
+            <div class="detail-row">
+
+                <span>Count Type</span>
+
+                <strong>
+                    {{ cash_count["count_type"] }}
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- Cash Summary -->
+
+        <section class="card">
+
+            <h2>Cash Summary</h2>
+
+            <div class="detail-row">
+
+                <span>Starting Cash</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["starting_cash"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Cash Sales</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["cash_sales"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Cash In</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["cash_in"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Cash Out</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["cash_out"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Expected Cash</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["expected_cash"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Actual Cash</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["actual_cash"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Remaining Cash</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["remaining_cash"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Remit</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["remit"]
+                    ) }}
+                </strong>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Difference</span>
+
+                <strong>
+                    ₱{{ "%.2f"|format(
+                        cash_count["difference"]
+                    ) }}
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- Denominations -->
+
+        <section class="card">
+
+            <h2>Denominations</h2>
+
+            {% if denominations %}
+
+                <div class="detail-table">
+
+                    <div class="detail-table-header">
+
+                        <strong>Denomination</strong>
+
+                        <strong>Quantity</strong>
+
+                        <strong>Subtotal</strong>
+
+                    </div>
+
+                    {% for denomination in denominations %}
+
+                        <div class="detail-table-row">
+
+                            <span>
+                                ₱{{ "%.2f"|format(
+                                    denomination["denomination"]
+                                ) }}
+                            </span>
+
+                            <span>
+                                {{ denomination["quantity"] }}
+                            </span>
+
+                            <span>
+                                ₱{{ "%.2f"|format(
+                                    denomination["subtotal"]
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    No denomination records found.
+                </p>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- Cash Movements -->
+
+        <section class="card">
+
+            <h2>Cash Movements</h2>
+
+            {% if movements %}
+
+                <div class="movement-history">
+
+                    {% for movement in movements %}
+
+                        <div class="movement-history-item">
+
+                            <div>
+
+                                <strong>
+                                    {% if movement["movement_type"] == "in" %}
+                                        Cash In
+                                    {% else %}
+                                        Cash Out
+                                    {% endif %}
+                                </strong>
+
+                                <p>
+                                    {{ movement["reason"] }}
+                                </p>
+
+                            </div>
+
+                            <strong>
+                                {% if movement["movement_type"] == "in" %}
+                                    +
+                                {% else %}
+                                    -
+                                {% endif %}
+
+                                ₱{{ "%.2f"|format(
+                                    movement["amount"]
+                                ) }}
+                            </strong>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    No cash movements recorded.
+                </p>
+
+            {% endif %}
+
+        </section>
+
+
+        <p>
+
+            <a
+                href="{{ url_for('main.cash_counts') }}"
+            >
+                ← Back to Cash Count History
+            </a>
+
+        </p>
+
+    </main>
+
+</body>
+
+</html>

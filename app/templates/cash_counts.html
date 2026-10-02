@@ -44,7 +44,14 @@
                         <div class="history-header">
 
                             <h2>
-                                Cash Count #{{ count["id"] }}
+                                <a
+                                    href="{{ url_for(
+                                        'main.cash_count_detail',
+                                        cash_count_id=count['id']
+                                    ) }}"
+                                >
+                                    Cash Count #{{ count["id"] }}
+                                </a>
                             </h2>
 
                             <span>
