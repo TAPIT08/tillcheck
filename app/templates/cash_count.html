@@ -13,10 +13,77 @@
 
     <main class="container">
 
-        <header class="page-header">
-            <h1>Cash Count</h1>
-            <p>Enter the physical cash currently in the register.</p>
-        </header>
+<header class="page-header">
+
+    <h1>Cash Count</h1>
+
+    <p>Enter the physical cash currently in the register.</p>
+
+</header>
+
+
+<section class="card">
+
+    <h2>Current Shift</h2>
+
+    {% if current_shift %}
+
+        <div class="detail-row">
+
+            <span>Shift ID</span>
+
+            <strong>
+                {{ current_shift["id"] }}
+            </strong>
+
+        </div>
+
+        <div class="detail-row">
+
+            <span>Shift Name</span>
+
+            <strong>
+                {{ current_shift["shift_name"] }}
+            </strong>
+
+        </div>
+
+        <div class="detail-row">
+
+            <span>Status</span>
+
+            <strong>
+                {{ current_shift["status"] }}
+            </strong>
+
+        </div>
+
+        <div class="detail-row">
+
+            <span>Started</span>
+
+            <strong>
+                {{ current_shift["started_at"] }}
+            </strong>
+
+        </div>
+
+    {% else %}
+
+        <p>
+            No open shift.
+            Please open a shift before recording a cash count.
+        </p>
+
+        <a
+            href="{{ url_for('main.shifts') }}"
+        >
+            Go to Shift Management
+        </a>
+
+    {% endif %}
+
+</section>
 
         <section class="count-type-card">
 
@@ -531,7 +598,23 @@
                 null
             {% endif %};
     </script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% if current_shift %}
+
+    <script>
+        const currentShiftId =
+            {{ current_shift["id"] }};
+    </script>
+
+{% else %}
+
+    <script>
+        const currentShiftId = null;
+    </script>
+
+{% endif %}
+
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
 </html>

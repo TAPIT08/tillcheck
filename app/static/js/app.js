@@ -1,475 +1,856 @@
-document.addEventListener("DOMContentLoaded", () => {
-  let cashMovements = [];
+from flask import (
+    Blueprint,
+    jsonify,
+    render_template,
+    request,
+)
 
-  // -----------------------------
-  // Denominations
-  // -----------------------------
+from database import get_connection
 
-  const denominationInputs = document.querySelectorAll(".denomination-input");
 
-  // -----------------------------
-  // Cash Inputs
-  // -----------------------------
+main = Blueprint(
+    "main",
+    __name__
+)
 
-  const remainingCashInput = document.getElementById("remaining-cash-input");
 
-  const startingCashInput = document.getElementById("starting-cash-input");
+# ============================================================
+# HOME
+# ============================================================
 
-  const salesCashInput = document.getElementById("sales-cash-input");
+@main.route("/")
+def index():
 
-  const startingCashSourceInput = document.getElementById(
-    "starting-cash-source",
-  );
+    return cash_count()
 
-  const startingCashNote = document.getElementById("starting-cash-note");
-  // -----------------------------
-  // Cash Displays
-  // -----------------------------
 
-  const startingCashDisplay = document.getElementById("starting-cash-display");
+# ============================================================
+# CASH COUNT PAGE
+# ============================================================
 
-  const salesCashDisplay = document.getElementById("sales-cash-display");
+@main.route("/cash-count")
+def cash_count():
 
-  const cashInDisplay = document.getElementById("cash-in-display");
+    connection = get_connection()
+    cursor = connection.cursor()
 
-  const cashOutDisplay = document.getElementById("cash-out-display");
+    cursor.execute(
+        """
+        SELECT *
+        FROM shifts
+        WHERE status = 'open'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    )
 
-  const expectedCashDisplay = document.getElementById("expected-cash-display");
+    current_shift = cursor.fetchone()
 
-  const remitDisplay = document.getElementById("remit-amount");
+    connection.close()
 
-  const actualCashDisplay = document.getElementById("actual-cash");
+    return render_template(
+        "cash_count.html",
+        current_shift=current_shift
+    )
 
-  const differenceDisplay = document.getElementById("difference");
 
-  const differenceStatus = document.getElementById("difference-status");
+# ============================================================
+# SAVE CASH COUNT
+# ============================================================
 
-  const remitValidation = document.getElementById("remit-validation");
+@main.route(
+    "/save-cash-count",
+    methods=["POST"]
+)
+def save_cash_count():
 
-  // -----------------------------
-  // Cash Movement Inputs
-  // -----------------------------
+    data = request.get_json()
 
-  const movementTypeInput = document.getElementById("movement-type");
+    if not data:
 
-  const movementAmountInput = document.getElementById("movement-amount");
+        return jsonify({
+            "success": False,
+            "message": "No cash count data was received."
+        }), 400
 
-  const movementReasonInput = document.getElementById("movement-reason");
 
-  const addMovementButton = document.getElementById("add-movement-button");
+    # --------------------------------------------------------
+    # Get shift ID
+    # --------------------------------------------------------
 
-  const movementList = document.getElementById("movement-list");
+    shift_id = data.get("shift_id")
 
-  // -----------------------------
-  // Save Cash Count
-  // -----------------------------
+    if shift_id is None:
 
-  const saveCashCountButton = document.getElementById("save-cash-count-button");
+        return jsonify({
+            "success": False,
+            "message": "No shift ID was provided."
+        }), 400
 
-  const saveStatus = document.getElementById("save-status");
 
-  // -----------------------------
-  // Currency Formatting
-  // -----------------------------
+    try:
 
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-    }).format(amount);
-  }
+        shift_id = int(shift_id)
 
-  // -----------------------------
-  // Calculate Actual Cash
-  // -----------------------------
+    except (TypeError, ValueError):
 
-  function calculateActualCash() {
-    let actualCash = 0;
+        return jsonify({
+            "success": False,
+            "message": "Invalid shift ID."
+        }), 400
 
-    denominationInputs.forEach((input) => {
-      const denomination = Number(input.dataset.value);
 
-      const quantity = Number(input.value) || 0;
+    # --------------------------------------------------------
+    # Get cash count values
+    # --------------------------------------------------------
 
-      actualCash += denomination * quantity;
-    });
+    count_type = data.get(
+        "count_type",
+        "manual"
+    )
 
-    return actualCash;
-  }
+    starting_cash = float(
+        data.get("starting_cash", 0) or 0
+    )
 
-  // -----------------------------
-  // Calculate Difference
-  // -----------------------------
+    cash_sales = float(
+        data.get("cash_sales", 0) or 0
+    )
 
-  function calculateDifference(expectedCash) {
-    const actualCash = calculateActualCash();
+    cash_in = float(
+        data.get("cash_in", 0) or 0
+    )
 
-    const difference = actualCash - expectedCash;
+    cash_out = float(
+        data.get("cash_out", 0) or 0
+    )
 
-    differenceDisplay.textContent = formatCurrency(difference);
+    expected_cash = float(
+        data.get("expected_cash", 0) or 0
+    )
 
-    if (difference === 0) {
-      differenceStatus.textContent = "No difference";
-    } else if (difference < 0) {
-      differenceStatus.textContent = "Shortage";
-    } else {
-      differenceStatus.textContent = "Overage";
-    }
-  }
+    actual_cash = float(
+        data.get("actual_cash", 0) or 0
+    )
 
-  // -----------------------------
-  // Calculate Expected Cash
-  // -----------------------------
+    remaining_cash = float(
+        data.get("remaining_cash", 0) or 0
+    )
 
-  function calculateExpectedCash() {
-    const startingCash = Number(startingCashInput.value) || 0;
+    remit = float(
+        data.get("remit", 0) or 0
+    )
 
-    const salesCash = Number(salesCashInput.value) || 0;
+    difference = float(
+        data.get("difference", 0) or 0
+    )
 
-    let cashIn = 0;
-    let cashOut = 0;
 
-    cashMovements.forEach((movement) => {
-      if (movement.type === "in") {
-        cashIn += movement.amount;
-      } else if (movement.type === "out") {
-        cashOut += movement.amount;
-      }
-    });
+    denominations = data.get(
+        "denominations",
+        []
+    )
 
-    const expectedCash = startingCash + salesCash + cashIn - cashOut;
+    movements = data.get(
+        "movements",
+        []
+    )
 
-    startingCashDisplay.textContent = formatCurrency(startingCash);
 
-    salesCashDisplay.textContent = formatCurrency(salesCash);
+    # --------------------------------------------------------
+    # Basic validation
+    # --------------------------------------------------------
 
-    cashInDisplay.textContent = formatCurrency(cashIn);
-
-    cashOutDisplay.textContent = formatCurrency(cashOut);
-
-    expectedCashDisplay.textContent = formatCurrency(expectedCash);
-
-    calculateDifference(expectedCash);
-  }
-
-  // -----------------------------
-  // Calculate Remit
-  // -----------------------------
-
-  function calculateRemit(actualCash) {
-    const remainingCash = Number(remainingCashInput.value) || 0;
-
-    const remit = actualCash - remainingCash;
-
-    if (remit < 0) {
-      remitDisplay.textContent = "Not enough cash";
-
-      remitValidation.textContent =
-        "Remaining cash is greater than actual cash.";
-
-      transferRemainingDisplay.textContent = formatCurrency(remainingCash);
-
-      transferRemitDisplay.textContent = "Not available";
-
-      return;
+    valid_count_types = {
+        "opening",
+        "transfer",
+        "closing",
+        "manual"
     }
 
-    remitDisplay.textContent = formatCurrency(remit);
+    if count_type not in valid_count_types:
 
-    transferRemainingDisplay.textContent = formatCurrency(remainingCash);
+        return jsonify({
+            "success": False,
+            "message": "Invalid count type."
+        }), 400
 
-    transferRemitDisplay.textContent = formatCurrency(remit);
 
-    const verifiedTotal = remit + remainingCash;
+    if starting_cash < 0:
 
-    if (verifiedTotal === actualCash) {
-      remitValidation.textContent = "✓ Remit + Remaining = Actual Cash";
-    } else {
-      remitValidation.textContent = "⚠ Calculation error";
-    }
-  }
+        return jsonify({
+            "success": False,
+            "message": "Starting cash cannot be negative."
+        }), 400
 
-  // -----------------------------
-  // Calculate Everything
-  // -----------------------------
 
-  function calculateCash() {
-    let actualCash = 0;
+    if cash_sales < 0:
 
-    denominationInputs.forEach((input) => {
-      const denomination = Number(input.dataset.value);
+        return jsonify({
+            "success": False,
+            "message": "Cash sales cannot be negative."
+        }), 400
 
-      const quantity = Number(input.value) || 0;
 
-      const subtotal = denomination * quantity;
+    if cash_in < 0:
 
-      actualCash += subtotal;
+        return jsonify({
+            "success": False,
+            "message": "Cash in cannot be negative."
+        }), 400
 
-      const subtotalElement = document.getElementById(
-        `subtotal-${denomination}`,
-      );
 
-      if (subtotalElement) {
-        subtotalElement.textContent = formatCurrency(subtotal);
-      }
-    });
+    if cash_out < 0:
 
-    actualCashDisplay.textContent = formatCurrency(actualCash);
+        return jsonify({
+            "success": False,
+            "message": "Cash out cannot be negative."
+        }), 400
 
-    calculateExpectedCash();
 
-    calculateRemit(actualCash);
-  }
+    if actual_cash < 0:
 
-  // -----------------------------
-  // Save Cash Count
-  // -----------------------------
+        return jsonify({
+            "success": False,
+            "message": "Actual cash cannot be negative."
+        }), 400
 
-  async function saveCashCount() {
-    if (!currentShiftId) {
-      saveStatus.textContent = "⚠ Please open a shift first.";
 
-      return;
-    }
+    if remaining_cash < 0:
 
-    const actualCash = calculateActualCash();
+        return jsonify({
+            "success": False,
+            "message": "Remaining cash cannot be negative."
+        }), 400
 
-    const startingCash = Number(startingCashInput.value) || 0;
 
-    const salesCash = Number(salesCashInput.value) || 0;
+    # --------------------------------------------------------
+    # Database connection
+    # --------------------------------------------------------
 
-    let cashIn = 0;
-    let cashOut = 0;
+    connection = get_connection()
+    cursor = connection.cursor()
 
-    cashMovements.forEach((movement) => {
-      if (movement.type === "in") {
-        cashIn += movement.amount;
-      }
 
-      if (movement.type === "out") {
-        cashOut += movement.amount;
-      }
-    });
+    try:
 
-    const expectedCash = startingCash + salesCash + cashIn - cashOut;
+        # ----------------------------------------------------
+        # Verify that the shift exists and is OPEN
+        # ----------------------------------------------------
 
-    const remainingCash = Number(remainingCashInput.value) || 0;
+        cursor.execute(
+            """
+            SELECT id
+            FROM shifts
+            WHERE id = ?
+              AND status = 'open'
+            """,
+            (shift_id,)
+        )
 
-    const remit = actualCash - remainingCash;
+        shift = cursor.fetchone()
 
-    const difference = actualCash - expectedCash;
 
-    const countType = document.querySelector(
-      'input[name="count-type"]:checked',
-    );
+        if not shift:
 
-    const denominations = [];
+            connection.close()
 
-    denominationInputs.forEach((input) => {
-      const denomination = Number(input.dataset.value);
+            return jsonify({
+                "success": False,
+                "message":
+                    "The selected shift does not exist "
+                    "or is not open."
+            }), 400
 
-      const quantity = Number(input.value) || 0;
 
-      const subtotal = denomination * quantity;
+        # ----------------------------------------------------
+        # Save main cash count record
+        # ----------------------------------------------------
 
-      denominations.push({
-        denomination: denomination,
+        cursor.execute(
+            """
+            INSERT INTO cash_counts (
+                shift_id,
+                count_type,
+                starting_cash,
+                cash_sales,
+                cash_in,
+                cash_out,
+                expected_cash,
+                actual_cash,
+                remaining_cash,
+                remit,
+                difference
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                shift_id,
+                count_type,
+                starting_cash,
+                cash_sales,
+                cash_in,
+                cash_out,
+                expected_cash,
+                actual_cash,
+                remaining_cash,
+                remit,
+                difference
+            )
+        )
+
+
+        cash_count_id = cursor.lastrowid
+
+
+        # ----------------------------------------------------
+        # Save denominations
+        # ----------------------------------------------------
+
+        for denomination in denominations:
+
+            denomination_value = float(
+                denomination.get(
+                    "denomination",
+                    0
+                )
+            )
+
+            quantity = int(
+                denomination.get(
+                    "quantity",
+                    0
+                )
+            )
+
+            subtotal = float(
+                denomination.get(
+                    "subtotal",
+                    denomination_value * quantity
+                )
+            )
+
+
+            if denomination_value < 0:
+
+                raise ValueError(
+                    "Denomination cannot be negative."
+                )
+
+
+            if quantity < 0:
+
+                raise ValueError(
+                    "Denomination quantity cannot be negative."
+                )
+
+
+            cursor.execute(
+                """
+                INSERT INTO cash_denominations (
+                    cash_count_id,
+                    denomination,
+                    quantity,
+                    subtotal
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    cash_count_id,
+                    denomination_value,
+                    quantity,
+                    subtotal
+                )
+            )
+
+
+        # ----------------------------------------------------
+        # Save cash movements
+        # ----------------------------------------------------
+
+        for movement in movements:
+
+            movement_type = movement.get(
+                "type"
+            )
+
+            amount = float(
+                movement.get(
+                    "amount",
+                    0
+                )
+            )
+
+            reason = str(
+                movement.get(
+                    "reason",
+                    ""
+                )
+            ).strip()
+
+
+            if movement_type not in {
+                "in",
+                "out"
+            }:
+
+                raise ValueError(
+                    "Invalid cash movement type."
+                )
+
+
+            if amount <= 0:
+
+                raise ValueError(
+                    "Cash movement amount must "
+                    "be greater than zero."
+                )
+
+
+            if not reason:
+
+                raise ValueError(
+                    "Cash movement reason is required."
+                )
+
+
+            cursor.execute(
+                """
+                INSERT INTO cash_movements (
+                    cash_count_id,
+                    movement_type,
+                    amount,
+                    reason
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    cash_count_id,
+                    movement_type,
+                    amount,
+                    reason
+                )
+            )
+
+
+        # ----------------------------------------------------
+        # Save everything
+        # ----------------------------------------------------
+
+        connection.commit()
+
+
+        return jsonify({
+            "success": True,
+            "message":
+                "Cash count saved successfully.",
+            "cash_count_id":
+                cash_count_id,
+            "shift_id":
+                shift_id
+        })
+
+
+    except ValueError as error:
+
+        connection.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(error)
+        }), 400
+
+
+    except Exception as error:
+
+        connection.rollback()
+
+        print(
+            "Error saving cash count:",
+            error
+        )
+
+        return jsonify({
+            "success": False,
+            "message":
+                "An unexpected error occurred "
+                "while saving the cash count."
+        }), 500
+
+
+    finally:
+
+        connection.close()
+
+
+# ============================================================
+# CASH COUNT HISTORY
+# ============================================================
+
+@main.route("/cash-counts")
+def cash_counts():
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            cash_counts.*,
+            shifts.shift_name
+        FROM cash_counts
+        LEFT JOIN shifts
+            ON cash_counts.shift_id = shifts.id
+        ORDER BY cash_counts.id DESC
+        """
+    )
+
+    cash_count_records = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "cash_counts.html",
+        cash_counts=cash_count_records
+    )
+
+
+# ============================================================
+# CASH COUNT DETAIL
+# ============================================================
 
-        quantity: quantity,
+@main.route(
+    "/cash-count/<int:cash_count_id>"
+)
+def cash_count_detail(
+    cash_count_id
+):
+
+    connection = get_connection()
+    cursor = connection.cursor()
 
-        subtotal: subtotal,
-      });
-    });
 
-    const data = {
-      shift_id: currentShiftId,
+    # --------------------------------------------------------
+    # Main cash count
+    # --------------------------------------------------------
 
-      count_type: countType ? countType.value : "manual",
+    cursor.execute(
+        """
+        SELECT
+            cash_counts.*,
+            shifts.shift_name
+        FROM cash_counts
+        LEFT JOIN shifts
+            ON cash_counts.shift_id = shifts.id
+        WHERE cash_counts.id = ?
+        """,
+        (cash_count_id,)
+    )
 
-      starting_cash: startingCash,
+    cash_count = cursor.fetchone()
 
-      cash_sales: salesCash,
 
-      cash_in: cashIn,
+    if not cash_count:
 
-      cash_out: cashOut,
+        connection.close()
 
-      expected_cash: expectedCash,
+        return (
+            "Cash count not found.",
+            404
+        )
 
-      actual_cash: actualCash,
 
-      remaining_cash: remainingCash,
+    # --------------------------------------------------------
+    # Denominations
+    # --------------------------------------------------------
 
-      remit: remit,
+    cursor.execute(
+        """
+        SELECT *
+        FROM cash_denominations
+        WHERE cash_count_id = ?
+        ORDER BY denomination DESC
+        """,
+        (cash_count_id,)
+    )
 
-      difference: difference,
+    denominations = cursor.fetchall()
 
-      denominations: denominations,
 
-      movements: cashMovements,
-    };
+    # --------------------------------------------------------
+    # Cash movements
+    # --------------------------------------------------------
 
-    saveStatus.textContent = "Saving...";
+    cursor.execute(
+        """
+        SELECT *
+        FROM cash_movements
+        WHERE cash_count_id = ?
+        ORDER BY id ASC
+        """,
+        (cash_count_id,)
+    )
 
-    try {
-      const response = await fetch("/save-cash-count", {
-        method: "POST",
+    movements = cursor.fetchall()
 
-        headers: {
-          "Content-Type": "application/json",
-        },
 
-        body: JSON.stringify(data),
-      });
+    connection.close()
 
-      const result = await response.json();
 
-      if (result.success) {
-        saveStatus.textContent = "✓ Cash count saved successfully.";
-      } else {
-        saveStatus.textContent = "⚠ " + result.message;
-      }
-    } catch (error) {
-      console.error(error);
+    return render_template(
+        "cash_count_detail.html",
+        cash_count=cash_count,
+        denominations=denominations,
+        movements=movements
+    )
 
-      saveStatus.textContent = "⚠ Could not save cash count.";
-    }
-  }
 
-  // -----------------------------
-  // Add Cash Movement
-  // -----------------------------
+# ============================================================
+# SHIFT MANAGEMENT
+# ============================================================
 
-  function addMovement() {
-    const type = movementTypeInput.value;
+@main.route("/shifts")
+def shifts():
 
-    const amount = Number(movementAmountInput.value);
+    connection = get_connection()
+    cursor = connection.cursor()
 
-    const reason = movementReasonInput.value.trim();
 
-    if (!amount || amount <= 0) {
-      alert("Please enter a valid amount.");
-      return;
-    }
+    cursor.execute(
+        """
+        SELECT *
+        FROM shifts
+        WHERE status = 'open'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    )
 
-    if (!reason) {
-      alert("Please enter a reason.");
-      return;
-    }
+    current_shift = cursor.fetchone()
 
-    const movement = {
-      type: type,
-      amount: amount,
-      reason: reason,
-    };
 
-    cashMovements.push(movement);
+    connection.close()
 
-    renderMovements();
 
-    movementAmountInput.value = "";
-    movementReasonInput.value = "";
+    return render_template(
+        "shifts.html",
+        current_shift=current_shift
+    )
 
-    calculateCash();
-  }
 
-  // -----------------------------
-  // Display Cash Movements
-  // -----------------------------
+# ============================================================
+# OPEN SHIFT
+# ============================================================
 
-  function renderMovements() {
-    movementList.innerHTML = "";
+@main.route(
+    "/open-shift",
+    methods=["POST"]
+)
+def open_shift():
 
-    if (cashMovements.length === 0) {
-      movementList.innerHTML = "<p>No cash movements recorded.</p>";
+    data = request.get_json()
 
-      return;
-    }
 
-    cashMovements.forEach((movement, index) => {
-      const movementElement = document.createElement("div");
+    if not data:
 
-      movementElement.className = "movement-item";
+        return jsonify({
+            "success": False,
+            "message":
+                "No shift data was received."
+        }), 400
 
-      const typeText = movement.type === "out" ? "Cash Out" : "Cash In";
 
-      const sign = movement.type === "out" ? "-" : "+";
+    shift_name = str(
+        data.get(
+            "shift_name",
+            ""
+        )
+    ).strip()
 
-      movementElement.innerHTML = `
-          <span class="movement-type">
-            ${typeText}
-          </span>
 
-          <span class="movement-amount">
-            ${sign}${formatCurrency(movement.amount)}
-          </span>
+    if not shift_name:
 
-          <span class="movement-reason">
-            ${movement.reason}
-          </span>
+        return jsonify({
+            "success": False,
+            "message":
+                "Shift name is required."
+        }), 400
 
-          <button
-            type="button"
-            class="remove-movement-button"
-            data-index="${index}"
-          >
-            ×
-          </button>
-        `;
 
-      movementList.appendChild(movementElement);
-    });
+    connection = get_connection()
+    cursor = connection.cursor()
 
-    document.querySelectorAll(".remove-movement-button").forEach((button) => {
-      button.addEventListener("click", () => {
-        const index = Number(button.dataset.index);
 
-        cashMovements.splice(index, 1);
+    try:
 
-        renderMovements();
+        # ----------------------------------------------------
+        # Check if another shift is already open
+        # ----------------------------------------------------
 
-        calculateCash();
-      });
-    });
-  }
-  // -----------------------------
-  // Cash Source Behvior
-  // -----------------------------
+        cursor.execute(
+            """
+            SELECT id
+            FROM shifts
+            WHERE status = 'open'
+            LIMIT 1
+            """
+        )
 
-  function updateStartingCashSource() {
-    const source = startingCashSourceInput.value;
+        existing_shift = cursor.fetchone()
 
-    if (source === "previous-shift") {
-      startingCashNote.textContent =
-        "Previous Shift will use the transferred " +
-        "remaining cash from the previous shift.";
-    } else {
-      startingCashNote.textContent =
-        "Enter the amount that should be in the " +
-        "register at the beginning of the shift.";
-    }
-  }
-  // -----------------------------
-  // Event Listeners
-  // -----------------------------
 
-  startingCashInput.addEventListener("input", calculateCash);
+        if existing_shift:
 
-  salesCashInput.addEventListener("input", calculateCash);
+            return jsonify({
+                "success": False,
+                "message":
+                    "There is already an open shift."
+            }), 400
 
-  remainingCashInput.addEventListener("input", calculateCash);
 
-  denominationInputs.forEach((input) => {
-    input.addEventListener("input", calculateCash);
-  });
+        # ----------------------------------------------------
+        # Create new shift
+        # ----------------------------------------------------
 
-  addMovementButton.addEventListener("click", addMovement);
-  saveCashCountButton.addEventListener("click", saveCashCount);
-  startingCashSourceInput.addEventListener("change", updateStartingCashSource);
-  updateStartingCashSource();
-  // -----------------------------
-  // Initial Calculation
-  // -----------------------------
+        cursor.execute(
+            """
+            INSERT INTO shifts (
+                shift_name,
+                started_at,
+                status
+            )
+            VALUES (
+                ?,
+                CURRENT_TIMESTAMP,
+                'open'
+            )
+            """,
+            (shift_name,)
+        )
 
-  calculateCash();
-});
+
+        shift_id = cursor.lastrowid
+
+        connection.commit()
+
+
+        return jsonify({
+            "success": True,
+            "message":
+                "Shift opened successfully.",
+            "shift_id":
+                shift_id
+        })
+
+
+    except Exception as error:
+
+        connection.rollback()
+
+        print(
+            "Error opening shift:",
+            error
+        )
+
+        return jsonify({
+            "success": False,
+            "message":
+                "Could not open shift."
+        }), 500
+
+
+    finally:
+
+        connection.close()
+
+
+# ============================================================
+# CLOSE SHIFT
+# ============================================================
+
+@main.route(
+    "/close-shift/<int:shift_id>",
+    methods=["POST"]
+)
+def close_shift(shift_id):
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+
+    try:
+
+        # ----------------------------------------------------
+        # Check that the shift exists and is open
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM shifts
+            WHERE id = ?
+              AND status = 'open'
+            """,
+            (shift_id,)
+        )
+
+        shift = cursor.fetchone()
+
+
+        if not shift:
+
+            return jsonify({
+                "success": False,
+                "message":
+                    "Shift does not exist "
+                    "or is already closed."
+            }), 400
+
+
+        # ----------------------------------------------------
+        # Close shift
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            UPDATE shifts
+            SET
+                status = 'closed',
+                ended_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (shift_id,)
+        )
+
+
+        connection.commit()
+
+
+        return jsonify({
+            "success": True,
+            "message":
+                "Shift closed successfully.",
+            "shift_id":
+                shift_id
+        })
+
+
+    except Exception as error:
+
+        connection.rollback()
+
+        print(
+            "Error closing shift:",
+            error
+        )
+
+        return jsonify({
+            "success": False,
+            "message":
+                "Could not close shift."
+        }), 500
+
+
+    finally:
+
+        connection.close()
