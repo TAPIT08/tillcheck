@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   let cashMovements = [];
 
-  let currentShiftId = null;
-
   // -----------------------------
   // Denominations
   // -----------------------------
@@ -228,6 +226,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
 
   async function saveCashCount() {
+    if (!currentShiftId) {
+      saveStatus.textContent = "⚠ Please open a shift first.";
+
+      return;
+    }
+
     const actualCash = calculateActualCash();
 
     const startingCash = Number(startingCashInput.value) || 0;
@@ -469,11 +473,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   calculateCash();
 });
-
-function setCurrentShift(shiftId) {
-  currentShiftId = Number(shiftId);
-
-  console.log("Current shift ID:", currentShiftId);
-}
-
-window.setCurrentShift = setCurrentShift;

@@ -474,3 +474,38 @@ body {
     gap: 6px;
   }
 }
+
+.shift-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.shift-actions a {
+  display: inline-block;
+  padding: 10px 16px;
+  text-decoration: none;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.shift-actions button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.form-group input {
+  padding: 10px;
+  font-size: 16px;
+}

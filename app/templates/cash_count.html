@@ -523,7 +523,14 @@
 
     </main>
 
-
+    <script>
+        const currentShiftId =
+            {% if current_shift %}
+                {{ current_shift["id"] }}
+            {% else %}
+                null
+            {% endif %};
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>

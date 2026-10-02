@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Shift Management - TillCheck</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="page-header">
+
+            <h1>Shift Management</h1>
+
+            <p>
+                Open and manage the current TillCheck shift.
+            </p>
+
+        </header>
+
+
+        {% if current_shift %}
+
+            <section class="card">
+
+                <h2>Current Shift</h2>
+
+                <div class="detail-row">
+
+                    <span>Shift ID</span>
+
+                    <strong>
+                        {{ current_shift["id"] }}
+                    </strong>
+
+                </div>
+
+                <div class="detail-row">
+
+                    <span>Shift Name</span>
+
+                    <strong>
+                        {{ current_shift["shift_name"] }}
+                    </strong>
+
+                </div>
+
+                <div class="detail-row">
+
+                    <span>Status</span>
+
+                    <strong>
+                        {{ current_shift["status"] }}
+                    </strong>
+
+                </div>
+
+                <div class="detail-row">
+
+                    <span>Started</span>
+
+                    <strong>
+                        {{ current_shift["started_at"] }}
+                    </strong>
+
+                </div>
+
+                <div class="shift-actions">
+
+                    <a
+                        href="{{ url_for(
+                            'main.cash_count'
+                        ) }}"
+                    >
+                        Go to Cash Count
+                    </a>
+
+                    <button
+                        type="button"
+                        id="close-shift-button"
+                    >
+                        Close Shift
+                    </button>
+
+                </div>
+
+                <p id="shift-status"></p>
+
+            </section>
+
+
+        {% else %}
+
+            <section class="card">
+
+                <h2>No Open Shift</h2>
+
+                <p>
+                    Open a shift before recording cash counts.
+                </p>
+
+                <div class="form-group">
+
+                    <label for="shift-name">
+                        Shift Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="shift-name"
+                        value="Morning Shift"
+                    >
+
+                </div>
+
+                <button
+                    type="button"
+                    id="open-shift-button"
+                >
+                    Open Shift
+                </button>
+
+                <p id="shift-status"></p>
+
+            </section>
+
+        {% endif %}
+
+
+        <p>
+
+            <a
+                href="{{ url_for(
+                    'main.cash_counts'
+                ) }}"
+            >
+                View Cash Count History
+            </a>
+
+        </p>
+
+    </main>
+
+
+    {% if current_shift %}
+
+        <script>
+            const currentShiftId =
+                {{ current_shift["id"] }};
+        </script>
+
+    {% else %}
+
+        <script>
+            const currentShiftId = null;
+        </script>
+
+    {% endif %}
+
+
+    <script>
+
+        const openButton =
+            document.getElementById(
+                "open-shift-button"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "close-shift-button"
+            );
+
+        const shiftName =
+            document.getElementById(
+                "shift-name"
+            );
+
+        const shiftStatus =
+            document.getElementById(
+                "shift-status"
+            );
+
+
+        /*
+         * OPEN SHIFT
+         */
+
+        if (openButton) {
+
+            openButton.addEventListener(
+                "click",
+                async () => {
+
+                    const name =
+                        shiftName.value.trim();
+
+
+                    if (!name) {
+
+                        shiftStatus.textContent =
+                            "Please enter a shift name.";
+
+                        return;
+                    }
+
+
+                    openButton.disabled = true;
+
+                    shiftStatus.textContent =
+                        "Opening shift...";
+
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                "/open-shift",
+                                {
+                                    method: "POST",
+
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                    body:
+                                        JSON.stringify({
+                                            shift_name:
+                                                name
+                                        })
+                                }
+                            );
+
+
+                        const result =
+                            await response.json();
+
+
+                        if (result.success) {
+
+                            shiftStatus.textContent =
+                                "✓ Shift opened successfully.";
+
+
+                            setTimeout(
+                                () => {
+
+                                    window.location.reload();
+
+                                },
+                                500
+                            );
+
+
+                        } else {
+
+                            shiftStatus.textContent =
+                                "⚠ "
+                                + result.message;
+
+                            openButton.disabled = false;
+
+                        }
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        shiftStatus.textContent =
+                            "⚠ Could not open shift.";
+
+                        openButton.disabled = false;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /*
+         * CLOSE SHIFT
+         */
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                async () => {
+
+                    const confirmed =
+                        confirm(
+                            "Close the current shift?"
+                        );
+
+
+                    if (!confirmed) {
+
+                        return;
+
+                    }
+
+
+                    closeButton.disabled = true;
+
+                    shiftStatus.textContent =
+                        "Closing shift...";
+
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                `/close-shift/${currentShiftId}`,
+                                {
+                                    method: "POST"
+                                }
+                            );
+
+
+                        const result =
+                            await response.json();
+
+
+                        if (result.success) {
+
+                            shiftStatus.textContent =
+                                "✓ Shift closed successfully.";
+
+
+                            setTimeout(
+                                () => {
+
+                                    window.location.reload();
+
+                                },
+                                500
+                            );
+
+
+                        } else {
+
+                            shiftStatus.textContent =
+                                "⚠ "
+                                + result.message;
+
+                            closeButton.disabled = false;
+
+                        }
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        shiftStatus.textContent =
+                            "⚠ Could not close shift.";
+
+                        closeButton.disabled = false;
+
+                    }
+
+                }
+            );
+
+        }
+
+    </script>
+
+</body>
+
+</html>

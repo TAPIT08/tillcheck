@@ -17,16 +17,35 @@ main = Blueprint(
 @main.route("/")
 def home():
 
-    return render_template(
-        "cash_count.html"
-    )
+    return cash_count()
 
 
 @main.route("/cash-count")
 def cash_count():
 
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    current_shift = cursor.execute(
+        """
+        SELECT
+            id,
+            shift_name,
+            started_at,
+            status
+        FROM shifts
+        WHERE status = 'open'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    connection.close()
+
     return render_template(
-        "cash_count.html"
+        "cash_count.html",
+        current_shift=current_shift
     )
 
 
@@ -345,6 +364,184 @@ def create_shift():
             "success": True,
             "shift_id": shift_id,
             "message": "Shift created successfully."
+        })
+
+    except Exception as error:
+
+        connection.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(error)
+        }), 500
+
+    finally:
+
+        connection.close()
+
+@main.route("/shifts")
+def shifts():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    current_shift = cursor.execute(
+        """
+        SELECT
+            id,
+            user_id,
+            shift_name,
+            started_at,
+            ended_at,
+            status,
+            created_at
+        FROM shifts
+        WHERE status = 'open'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    connection.close()
+
+    return render_template(
+        "shifts.html",
+        current_shift=current_shift
+    )
+
+
+@main.route(
+    "/open-shift",
+    methods=["POST"]
+)
+def open_shift():
+
+    data = request.get_json() or {}
+
+    shift_name = data.get(
+        "shift_name",
+        "New Shift"
+    )
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    try:
+
+        existing_shift = cursor.execute(
+            """
+            SELECT id
+            FROM shifts
+            WHERE status = 'open'
+            LIMIT 1
+            """
+        ).fetchone()
+
+        if existing_shift:
+
+            return jsonify({
+                "success": False,
+                "message":
+                    "There is already an open shift."
+            }), 400
+
+        cursor.execute(
+            """
+            INSERT INTO shifts (
+                shift_name,
+                started_at,
+                status
+            )
+            VALUES (?, CURRENT_TIMESTAMP, ?)
+            """,
+            (
+                shift_name,
+                "open"
+            )
+        )
+
+        shift_id = cursor.lastrowid
+
+        connection.commit()
+
+        return jsonify({
+            "success": True,
+            "shift_id": shift_id,
+            "message":
+                "Shift opened successfully."
+        })
+
+    except Exception as error:
+
+        connection.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(error)
+        }), 500
+
+    finally:
+
+        connection.close()
+
+
+@main.route(
+    "/close-shift/<int:shift_id>",
+    methods=["POST"]
+)
+def close_shift(shift_id):
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    try:
+
+        shift = cursor.execute(
+            """
+            SELECT id, status
+            FROM shifts
+            WHERE id = ?
+            """,
+            (shift_id,)
+        ).fetchone()
+
+        if shift is None:
+
+            return jsonify({
+                "success": False,
+                "message": "Shift not found."
+            }), 404
+
+        if shift["status"] != "open":
+
+            return jsonify({
+                "success": False,
+                "message":
+                    "This shift is already closed."
+            }), 400
+
+        cursor.execute(
+            """
+            UPDATE shifts
+
+            SET
+                status = 'closed',
+                ended_at = CURRENT_TIMESTAMP
+
+            WHERE id = ?
+            """,
+            (shift_id,)
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "success": True,
+            "message":
+                "Shift closed successfully."
         })
 
     except Exception as error:
