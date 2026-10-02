@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   let cashMovements = [];
 
+  let currentShiftId = null;
+
   // -----------------------------
   // Denominations
   // -----------------------------
@@ -276,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const data = {
-      shift_id: null,
+      shift_id: currentShiftId,
 
       count_type: countType ? countType.value : "manual",
 
@@ -467,3 +469,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   calculateCash();
 });
+
+function setCurrentShift(shiftId) {
+  currentShiftId = Number(shiftId);
+
+  console.log("Current shift ID:", currentShiftId);
+}
+
+window.setCurrentShift = setCurrentShift;

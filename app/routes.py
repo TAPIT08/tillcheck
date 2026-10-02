@@ -299,3 +299,157 @@ def cash_count_detail(cash_count_id):
         denominations=denominations,
         movements=movements
     )
+
+@main.route(
+    "/create-shift",
+    methods=["POST"]
+)
+def create_shift():
+
+    data = request.get_json() or {}
+
+    user_id = data.get("user_id")
+    shift_name = data.get(
+        "shift_name",
+        "Test Shift"
+    )
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            INSERT INTO shifts (
+                user_id,
+                shift_name,
+                started_at,
+                status
+            )
+            VALUES (?, ?, CURRENT_TIMESTAMP, ?)
+            """,
+            (
+                user_id,
+                shift_name,
+                "open"
+            )
+        )
+
+        shift_id = cursor.lastrowid
+
+        connection.commit()
+
+        return jsonify({
+            "success": True,
+            "shift_id": shift_id,
+            "message": "Shift created successfully."
+        })
+
+    except Exception as error:
+
+        connection.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(error)
+        }), 500
+
+    finally:
+
+        connection.close()
+
+@main.route("/shift-test")
+def shift_test():
+
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>TillCheck Shift Test</title>
+    </head>
+
+    <body>
+
+        <h1>Create Test Shift</h1>
+
+        <input
+            id="shift-name"
+            type="text"
+            value="Morning Shift"
+        >
+
+        <button
+            id="create-shift-button"
+        >
+            Create Shift
+        </button>
+
+        <p id="status"></p>
+
+        <script>
+
+            const button =
+                document.getElementById(
+                    "create-shift-button"
+                );
+
+            const shiftName =
+                document.getElementById(
+                    "shift-name"
+                );
+
+            const status =
+                document.getElementById(
+                    "status"
+                );
+
+            button.addEventListener(
+                "click",
+                async () => {
+
+                    const response =
+                        await fetch(
+                            "/create-shift",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        shift_name:
+                                            shiftName.value
+                                    })
+                            }
+                        );
+
+                    const result =
+                        await response.json();
+
+                    if (result.success) {
+
+                        status.textContent =
+                            "Shift created. ID: "
+                            + result.shift_id;
+
+                    } else {
+
+                        status.textContent =
+                            "Error: "
+                            + result.message;
+
+                    }
+
+                }
+            );
+
+        </script>
+
+    </body>
+    </html>
+    """
