@@ -736,3 +736,46 @@ def previous_shift_cash():
 
     finally:
         connection.close()
+
+@main.route("/previous-transfer-cash", methods=["GET"])
+def previous_transfer_cash():
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                cc.id,
+                cc.shift_id,
+                cc.remaining_cash,
+                cc.remit,
+                cc.created_at
+            FROM cash_counts AS cc
+            JOIN shifts AS s
+                ON cc.shift_id = s.id
+            WHERE cc.count_type = 'transfer'
+              AND s.status = 'closed'
+            ORDER BY cc.created_at DESC, cc.id DESC
+            LIMIT 1
+            """
+        )
+
+        transfer = cursor.fetchone()
+
+        if not transfer:
+            return jsonify({
+                "success": False,
+                "message": "No previous shift transfer found."
+            })
+
+        return jsonify({
+            "success": True,
+            "remaining_cash": transfer["remaining_cash"],
+            "remit": transfer["remit"],
+            "cash_count_id": transfer["id"],
+            "shift_id": transfer["shift_id"]
+        })
+
+    finally:
+        connection.close()

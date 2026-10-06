@@ -511,18 +511,37 @@ if (startingCashSource) {
   startingCashSource.addEventListener("change", async () => {
     if (startingCashSource.value === "previous-shift") {
       await loadPreviousShiftCash();
-    } else {
-      if (startingCashNote) {
-        startingCashNote.textContent = "Enter the starting cash manually.";
-      }
 
-      startingCashInput.value = "";
-
-      startingCashInput.dispatchEvent(new Event("input"));
+      return;
     }
+
+    if (startingCashSource.value === "previous-transfer") {
+      await loadPreviousTransferCash();
+
+      return;
+    }
+
+    /*
+     * Manual Entry
+     */
+
+    if (startingCashNote) {
+      startingCashNote.textContent = "Enter the starting cash manually.";
+    }
+
+    startingCashInput.value = "";
+
+    startingCashInput.dispatchEvent(new Event("input"));
   });
 }
 
+if (countType) {
+  countType.addEventListener("change", () => {
+    updateTransferVisibility();
+
+    updateCalculations();
+  });
+}
 /*
  * =========================================================
  * SAVE CASH COUNT
@@ -653,10 +672,31 @@ function getDenominationData() {
 
 /*
  * =========================================================
+ * UPDATE TRANSFER VISIBILITY
+ * =========================================================
+ */
+
+function updateTransferVisibility() {
+  const transferSummary = document.querySelector(".transfer-summary");
+
+  if (!transferSummary) {
+    return;
+  }
+
+  if (countType && countType.value === "transfer") {
+    transferSummary.style.display = "block";
+  } else {
+    transferSummary.style.display = "none";
+  }
+}
+/*
+ * =========================================================
  * INITIALIZE
  * =========================================================
  */
 
 renderCashMovements();
+
+updateTransferVisibility();
 
 updateCalculations();
