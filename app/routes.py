@@ -650,3 +650,89 @@ def shift_test():
     </body>
     </html>
     """
+@main.route("/previous-shift-cash", methods=["GET"])
+def previous_shift_cash():
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Find the most recently closed shift
+        cursor.execute(
+            """
+            SELECT id
+            FROM shifts
+            WHERE status = 'closed'
+            ORDER BY ended_at DESC, id DESC
+            LIMIT 1
+            """
+        )
+
+        previous_shift = cursor.fetchone()
+
+        if not previous_shift:
+            return jsonify({
+                "success": False,
+                "message": "No previous closed shift found."
+            })
+
+        shift_id = previous_shift["id"]
+
+        # Prefer the latest closing count
+        cursor.execute(
+            """
+            SELECT remaining_cash
+            FROM cash_counts
+            WHERE shift_id = ?
+              AND count_type = 'closing'
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (shift_id,)
+        )
+
+        cash_count = cursor.fetchone()
+
+        # If there is no closing count, use the latest transfer count
+        if not cash_count:
+            cursor.execute(
+                """
+                SELECT remaining_cash
+                FROM cash_counts
+                WHERE shift_id = ?
+                  AND count_type = 'transfer'
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (shift_id,)
+            )
+
+            cash_count = cursor.fetchone()
+
+        # If there is still no result, use the latest cash count
+        if not cash_count:
+            cursor.execute(
+                """
+                SELECT remaining_cash
+                FROM cash_counts
+                WHERE shift_id = ?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (shift_id,)
+            )
+
+            cash_count = cursor.fetchone()
+
+        if not cash_count:
+            return jsonify({
+                "success": False,
+                "message": "No cash count found for the previous shift."
+            })
+
+        return jsonify({
+            "success": True,
+            "remaining_cash": cash_count["remaining_cash"]
+        })
+
+    finally:
+        connection.close()
