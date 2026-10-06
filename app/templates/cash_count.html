@@ -1,624 +1,791 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Cash Count - TillCheck</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
 </head>
 
 <body>
 
-    <main class="container">
+<div class="container">
 
-<header class="page-header">
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
 
-    <h1>Cash Count</h1>
+    <header class="page-header">
 
-    <p>Enter the physical cash currently in the register.</p>
-
-</header>
-
-
-<section class="card">
-
-    <h2>Current Shift</h2>
-
-    {% if current_shift %}
-
-        <div class="detail-row">
-
-            <span>Shift ID</span>
-
-            <strong>
-                {{ current_shift["id"] }}
-            </strong>
-
-        </div>
-
-        <div class="detail-row">
-
-            <span>Shift Name</span>
-
-            <strong>
-                {{ current_shift["shift_name"] }}
-            </strong>
-
-        </div>
-
-        <div class="detail-row">
-
-            <span>Status</span>
-
-            <strong>
-                {{ current_shift["status"] }}
-            </strong>
-
-        </div>
-
-        <div class="detail-row">
-
-            <span>Started</span>
-
-            <strong>
-                {{ current_shift["started_at"] }}
-            </strong>
-
-        </div>
-
-    {% else %}
+        <h1>Cash Count</h1>
 
         <p>
-            No open shift.
-            Please open a shift before recording a cash count.
+            Record and verify the cash in the register.
         </p>
 
-        <a
-            href="{{ url_for('main.shifts') }}"
-        >
-            Go to Shift Management
-        </a>
+    </header>
 
-    {% endif %}
 
-</section>
+    <!-- =====================================================
+         CURRENT SHIFT
+         ===================================================== -->
 
-        <section class="count-type-card">
+    <section class="card">
 
-            <h2>Count Type</h2>
+        <h2>Current Shift</h2>
 
-            <div class="count-type-options">
+        {% if current_shift %}
 
-                <label>
-                    <input
-                        type="radio"
-                        name="count-type"
-                        value="opening"
-                        checked
-                    >
-                    Opening
-                </label>
+            <div class="summary-row">
 
-                <label>
-                    <input
-                        type="radio"
-                        name="count-type"
-                        value="transfer"
-                    >
-                    Shift Transfer
-                </label>
+                <span>Shift ID</span>
 
-                <label>
-                    <input
-                        type="radio"
-                        name="count-type"
-                        value="closing"
-                    >
-                    Closing
-                </label>
-
-                <label>
-                    <input
-                        type="radio"
-                        name="count-type"
-                        value="manual"
-                    >
-                    Manual Count
-                </label>
+                <strong>
+                    {{ current_shift.id }}
+                </strong>
 
             </div>
 
-        </section>
+            <div class="summary-row">
 
+                <span>Shift Name</span>
 
-        <section class="cash-count-card">
-
-            <h2>Denominations</h2>
-
-            <div class="denomination-list">
-
-                <div class="denomination-row">
-                    <label for="denom-1000">₱1,000</label>
-
-                    <input
-                        type="number"
-                        id="denom-1000"
-                        class="denomination-input"
-                        data-value="1000"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-1000">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-500">₱500</label>
-
-                    <input
-                        type="number"
-                        id="denom-500"
-                        class="denomination-input"
-                        data-value="500"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-500">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-200">₱200</label>
-
-                    <input
-                        type="number"
-                        id="denom-200"
-                        class="denomination-input"
-                        data-value="200"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-200">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-100">₱100</label>
-
-                    <input
-                        type="number"
-                        id="denom-100"
-                        class="denomination-input"
-                        data-value="100"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-100">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-50">₱50</label>
-
-                    <input
-                        type="number"
-                        id="denom-50"
-                        class="denomination-input"
-                        data-value="50"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-50">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-20">₱20</label>
-
-                    <input
-                        type="number"
-                        id="denom-20"
-                        class="denomination-input"
-                        data-value="20"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-20">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-10">₱10</label>
-
-                    <input
-                        type="number"
-                        id="denom-10"
-                        class="denomination-input"
-                        data-value="10"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-10">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-5">₱5</label>
-
-                    <input
-                        type="number"
-                        id="denom-5"
-                        class="denomination-input"
-                        data-value="5"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-5">
-                        ₱0.00
-                    </span>
-                </div>
-
-                <div class="denomination-row">
-                    <label for="denom-1">₱1</label>
-
-                    <input
-                        type="number"
-                        id="denom-1"
-                        class="denomination-input"
-                        data-value="1"
-                        min="0"
-                        value="0"
-                    >
-
-                    <span class="subtotal" id="subtotal-1">
-                        ₱0.00
-                    </span>
-                </div>
+                <strong>
+                    {{ current_shift.shift_name }}
+                </strong>
 
             </div>
 
-        </section>
+            <div class="summary-row">
 
+                <span>Status</span>
 
-        <section class="total-card">
-
-            <h2>Actual Cash</h2>
-
-            <p id="actual-cash">₱0.00</p>
-
-        </section>
-
-
-        <section class="expected-card">
-
-            <h2>Expected Cash</h2>
-
-            <div class="expected-input-group">
-
-                <label for="starting-cash-source">
-                    Starting Cash Source
-                </label>
-
-                <select id="starting-cash-source">
-
-                    <option value="manual">
-                        Manual Entry
-                    </option>
-
-                    <option value="previous-shift">
-                        Previous Shift
-                    </option>
-
-                    <option value="previous-transfer">
-                        Previous Shift Transfer
-                    </option>
-
-                </select>
+                <strong>
+                    {{ current_shift.status }}
+                </strong>
 
             </div>
 
+        {% else %}
 
-            <div class="expected-input-group">
-
-                <label for="starting-cash-input">
-                    Starting Cash
-                </label>
-
-                <input
-                    type="number"
-                    id="starting-cash-input"
-                    min="0"
-                    step="0.01"
-                    value="4000"
-                >
-
-                <p
-                    id="starting-cash-note"
-                    class="calculation-note"
-                >
-                    Enter the amount that should be in the register
-                    at the beginning of the shift.
-                </p>
-
-            </div>
-
-            <div class="expected-input-group">
-
-                <label for="sales-cash-input">
-                    Cash Sales
-                </label>
-
-                <input
-                    type="number"
-                    id="sales-cash-input"
-                    min="0"
-                    step="0.01"
-                    value="0"
-                >
-
-            </div>
-
-            <div class="expected-summary">
-
-                <div>
-                    <span>Starting Cash</span>
-                    <strong id="starting-cash-display">
-                        ₱4,000.00
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Cash Sales</span>
-                    <strong id="sales-cash-display">
-                        ₱0.00
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Cash In</span>
-                    <strong id="cash-in-display">
-                        ₱0.00
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Cash Out</span>
-                    <strong id="cash-out-display">
-                        ₱0.00
-                    </strong>
-                </div>
-
-                <div class="expected-total">
-
-                    <span>Expected Cash</span>
-
-                    <strong id="expected-cash-display">
-                        ₱4,000.00
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </section>
-
-        <section class="cash-movement-card">
-
-            <h2>Cash Movements</h2>
-
-            <p class="section-description">
-                Record money added to or removed from the register.
+            <p>
+                No open shift.
+                Please open a shift before saving a cash count.
             </p>
 
+            <a href="{{ url_for('main.shifts') }}">
+                Go to Shifts
+            </a>
 
-            <div class="movement-form">
+        {% endif %}
 
-                <div class="movement-field">
-
-                    <label for="movement-type">
-                        Type
-                    </label>
-
-                    <select id="movement-type">
-
-                        <option value="out">
-                            Cash Out
-                        </option>
-
-                        <option value="in">
-                            Cash In
-                        </option>
-
-                    </select>
-
-                </div>
+    </section>
 
 
-                <div class="movement-field">
+    <!-- =====================================================
+         COUNT TYPE
+         ===================================================== -->
 
-                    <label for="movement-amount">
-                        Amount
-                    </label>
+    <section class="card">
 
-                    <input
-                        type="number"
-                        id="movement-amount"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+        <h2>Count Type</h2>
 
-                </div>
+        <label for="count-type">
+            Count Type
+        </label>
+
+        <select id="count-type">
+
+            <option value="opening">
+                Opening
+            </option>
+
+            <option value="transfer">
+                Shift Transfer
+            </option>
+
+            <option value="closing">
+                Closing
+            </option>
+
+            <option value="manual">
+                Manual Count
+            </option>
+
+        </select>
 
 
-                <div class="movement-field">
+        <!-- Phase 6.5 -->
 
-                    <label for="movement-reason">
-                        Reason
-                    </label>
+        <p id="count-type-note"></p>
 
-                    <input
-                        type="text"
-                        id="movement-reason"
-                        placeholder="e.g. Kitchen purchase"
-                    >
-
-                </div>
+    </section>
 
 
-                <button
-                    type="button"
-                    id="add-movement-button"
+    <!-- =====================================================
+         STARTING CASH
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Starting Cash</h2>
+
+
+        <label for="starting-cash-source">
+            Starting Cash Source
+        </label>
+
+        <select id="starting-cash-source">
+
+            <option value="manual">
+                Manual Entry
+            </option>
+
+            <option value="previous-shift">
+                Previous Shift
+            </option>
+
+            <option value="previous-transfer">
+                Previous Shift Transfer
+            </option>
+
+        </select>
+
+
+        <label for="starting-cash-input">
+
+            Starting Cash
+
+        </label>
+
+        <input
+            type="number"
+            id="starting-cash-input"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+        >
+
+
+        <p id="starting-cash-note">
+
+            Enter the starting cash manually.
+
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         CASH SALES
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Cash Sales</h2>
+
+        <label for="sales-cash-input">
+
+            Cash Sales
+
+        </label>
+
+        <input
+            type="number"
+            id="sales-cash-input"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+        >
+
+    </section>
+
+
+    <!-- =====================================================
+         CASH DENOMINATIONS
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Cash Denominations</h2>
+
+        <p>
+            Enter the quantity of each denomination counted.
+        </p>
+
+
+        <div class="denominations">
+
+
+            <!-- ₱1,000 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="1000"
+            >
+
+                <label for="denomination-1000">
+                    ₱1,000
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-1000"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
                 >
-                    Add Movement
-                </button>
 
             </div>
 
 
-            <div class="movement-list-container">
+            <!-- ₱500 -->
 
-                <h3>Recorded Movements</h3>
+            <div
+                class="denomination-row"
+                data-denomination="500"
+            >
 
-                <div id="movement-list">
-                </div>
+                <label for="denomination-500">
+                    ₱500
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-500"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
 
             </div>
 
-        </section>
-        <section class="remaining-card">
 
-            <h2>Remaining Cash</h2>
+            <!-- ₱200 -->
 
-            <label for="remaining-cash-input">
-                Amount that should remain in the register.
+            <div
+                class="denomination-row"
+                data-denomination="200"
+            >
+
+                <label for="denomination-200">
+                    ₱200
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-200"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱100 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="100"
+            >
+
+                <label for="denomination-100">
+                    ₱100
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-100"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱50 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="50"
+            >
+
+                <label for="denomination-50">
+                    ₱50
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-50"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱20 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="20"
+            >
+
+                <label for="denomination-20">
+                    ₱20
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-20"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱10 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="10"
+            >
+
+                <label for="denomination-10">
+                    ₱10
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-10"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱5 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="5"
+            >
+
+                <label for="denomination-5">
+                    ₱5
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-5"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+
+            <!-- ₱1 -->
+
+            <div
+                class="denomination-row"
+                data-denomination="1"
+            >
+
+                <label for="denomination-1">
+                    ₱1
+                </label>
+
+                <input
+                    type="number"
+                    id="denomination-1"
+                    min="0"
+                    step="1"
+                    value="0"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         CASH MOVEMENTS
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Cash Movements</h2>
+
+        <p>
+            Record cash added to or removed from the register.
+        </p>
+
+
+        <div class="movement-form">
+
+
+            <label for="movement-type">
+
+                Movement Type
+
+            </label>
+
+            <select id="movement-type">
+
+                <option value="in">
+                    Cash In
+                </option>
+
+                <option value="out">
+                    Cash Out
+                </option>
+
+            </select>
+
+
+            <label for="movement-amount">
+
+                Amount
+
             </label>
 
             <input
                 type="number"
-                id="remaining-cash-input"
+                id="movement-amount"
                 min="0"
                 step="0.01"
-                value="4000"
+                placeholder="0.00"
             >
 
-        </section>
 
+            <label for="movement-reason">
 
-        <section class="remit-card">
+                Reason
 
-            <h2>Remit</h2>
+            </label>
 
-            <p id="remit-amount">₱0.00</p>
+            <input
+                type="text"
+                id="movement-reason"
+                placeholder="Enter reason"
+            >
 
-            <p class="calculation-note">
-                Actual Cash − Remaining Cash
-            </p>
-
-            <p id="remit-validation">
-                Remit + Remaining = Actual Cash
-            </p>
-
-
-            <div class="transfer-summary">
-
-                <h3>Shift Transfer</h3>
-
-                <div class="transfer-row">
-
-                    <span>Amount Remaining</span>
-
-                    <strong id="transfer-remaining">
-                        ₱0.00
-                    </strong>
-
-                </div>
-
-
-                <div class="transfer-row">
-
-                    <span>Amount Remitted</span>
-
-                    <strong id="transfer-remit">
-                        ₱0.00
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </section>
-
-        <section class="difference-card">
-
-            <h2>Difference</h2>
-
-            <p id="difference">₱0.00</p>
-
-            <p id="difference-status">No difference</p>
-
-        </section>
-
-        <section class="save-section">
 
             <button
                 type="button"
-                id="save-cash-count-button"
+                id="add-movement-button"
             >
-                Save Cash Count
+                Add Movement
             </button>
 
-            <p
-                id="save-status"
-                class="save-status"
-            ></p>
-
-        </section>
-
-    </main>
-
-    <script>
-        const currentShiftId =
-            {% if current_shift %}
-                {{ current_shift["id"] }}
-            {% else %}
-                null
-            {% endif %};
-    </script>
-    {% if current_shift %}
-
-    <script>
-        const currentShiftId =
-            {{ current_shift["id"] }};
-    </script>
-
-{% else %}
-
-    <script>
-        const currentShiftId = null;
-    </script>
-
-{% endif %}
+        </div>
 
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+        <div id="movement-list">
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         CASH SUMMARY
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Cash Summary</h2>
+
+
+        <!-- Starting Cash -->
+
+        <div class="summary-row">
+
+            <span>
+                Starting Cash
+            </span>
+
+            <strong id="starting-cash-display">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <!-- Cash Sales -->
+
+        <div class="summary-row">
+
+            <span>
+                Cash Sales
+            </span>
+
+            <strong id="sales-cash-display">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <!-- Cash In -->
+
+        <div class="summary-row">
+
+            <span>
+                Cash In
+            </span>
+
+            <strong id="cash-in-display">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <!-- Cash Out -->
+
+        <div class="summary-row">
+
+            <span>
+                Cash Out
+            </span>
+
+            <strong id="cash-out-display">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <!-- Expected Cash -->
+
+        <div class="summary-row">
+
+            <span>
+                Expected Cash
+            </span>
+
+            <strong id="expected-cash-display">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <!-- Actual Cash -->
+
+        <div class="summary-row">
+
+            <span>
+                Actual Cash
+            </span>
+
+            <strong id="actual-cash">
+                ₱0.00
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         REMAINING CASH
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Remaining Cash</h2>
+
+        <label for="remaining-cash-input">
+
+            Amount Remaining in Register
+
+        </label>
+
+        <input
+            type="number"
+            id="remaining-cash-input"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+        >
+
+    </section>
+
+
+    <!-- =====================================================
+         REMIT
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Remit</h2>
+
+
+        <div class="summary-row">
+
+            <span>
+                Amount to Remit
+            </span>
+
+            <strong id="remit-amount">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <p id="remit-validation">
+
+            ✓ Remit + Remaining = Actual Cash
+
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         SHIFT TRANSFER
+         ===================================================== -->
+
+    <section class="card transfer-summary">
+
+        <h2>Shift Transfer</h2>
+
+
+        <div class="transfer-row">
+
+            <span>
+                Amount Remaining
+            </span>
+
+            <strong id="transfer-remaining">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <div class="transfer-row">
+
+            <span>
+                Amount Remitted
+            </span>
+
+            <strong id="transfer-remit">
+                ₱0.00
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         DIFFERENCE
+         ===================================================== -->
+
+    <section class="card">
+
+        <h2>Difference</h2>
+
+
+        <div class="summary-row">
+
+            <span>
+                Difference
+            </span>
+
+            <strong id="difference">
+                ₱0.00
+            </strong>
+
+        </div>
+
+
+        <p id="difference-status">
+
+            No Difference
+
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         SAVE
+         ===================================================== -->
+
+    <section class="actions">
+
+        <button
+            type="button"
+            id="save-cash-count-button"
+        >
+            Save Cash Count
+        </button>
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     CURRENT SHIFT ID
+     ========================================================= -->
+
+<script>
+
+    window.currentShiftId =
+        {{ current_shift.id if current_shift else 'null' }};
+
+</script>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}"
+></script>
+
 
 </body>
+
 </html>
+```

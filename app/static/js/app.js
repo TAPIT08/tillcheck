@@ -419,6 +419,89 @@ function updateTransferVisibility() {
 
 /*
  * =========================================================
+ * UPDATE COUNT TYPE BEHAVIOR
+ * =========================================================
+ */
+
+function updateCountTypeBehavior() {
+  if (!countType) {
+    return;
+  }
+
+  const selectedType = countType.value;
+
+  /*
+   * Opening Count
+   */
+
+  if (selectedType === "opening") {
+    if (countTypeNote) {
+      countTypeNote.textContent =
+        "Opening Count: record the cash available when the shift begins.";
+    }
+
+    if (startingCashNote) {
+      startingCashNote.textContent =
+        "Enter or load the starting cash for this shift.";
+    }
+
+    return;
+  }
+
+  /*
+   * Shift Transfer
+   */
+
+  if (selectedType === "transfer") {
+    if (countTypeNote) {
+      countTypeNote.textContent =
+        "Shift Transfer: record the cash being handed over to the next shift.";
+    }
+
+    if (startingCashNote) {
+      startingCashNote.textContent =
+        "Record the cash position before handing over the register.";
+    }
+
+    return;
+  }
+
+  /*
+   * Closing Count
+   */
+
+  if (selectedType === "closing") {
+    if (countTypeNote) {
+      countTypeNote.textContent =
+        "Closing Count: record the final cash position at the end of the shift.";
+    }
+
+    if (startingCashNote) {
+      startingCashNote.textContent =
+        "Record the final cash position before closing the shift.";
+    }
+
+    return;
+  }
+
+  /*
+   * Manual Count
+   */
+
+  if (selectedType === "manual") {
+    if (countTypeNote) {
+      countTypeNote.textContent =
+        "Manual Count: use this for a general cash count that is not tied to opening, transfer, or closing.";
+    }
+
+    if (startingCashNote) {
+      startingCashNote.textContent = "Manual cash count.";
+    }
+  }
+}
+
+/*
+ * =========================================================
  * RENDER CASH MOVEMENTS
  * =========================================================
  */
@@ -623,6 +706,8 @@ if (countType) {
   countType.addEventListener("change", () => {
     updateTransferVisibility();
 
+    updateCountTypeBehavior();
+
     updateCalculations();
   });
 }
@@ -812,5 +897,7 @@ if (saveButton) {
 renderCashMovements();
 
 updateTransferVisibility();
+
+updateCountTypeBehavior();
 
 updateCalculations();
