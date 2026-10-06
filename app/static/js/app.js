@@ -1,6 +1,6 @@
 /*
  * TillCheck - Cash Count
- * Phase 6.2
+ * Phase 6.4
  *
  * Includes:
  * - Cash denomination calculation
@@ -13,6 +13,9 @@
  * - Cash movement management
  * - Shift-aware saving
  * - Previous Shift -> Starting Cash
+ * - Previous Shift Transfer -> Starting Cash
+ * - Shift Transfer visibility
+ * - Transfer validation
  */
 
 /*
@@ -67,10 +70,12 @@ const addMovementButton = document.getElementById("add-movement-button");
 
 const movementList = document.getElementById("movement-list");
 
+const saveButton = document.getElementById("save-cash-count-button");
+
 /*
- * Current shift ID
- *
- * cash_count.html should provide this value.
+ * =========================================================
+ * CURRENT SHIFT
+ * =========================================================
  */
 
 const currentShiftId =
@@ -86,7 +91,7 @@ let cashMovements = [];
 
 /*
  * =========================================================
- * FORMAT MONEY
+ * FORMAT CURRENCY
  * =========================================================
  */
 
@@ -115,7 +120,7 @@ function getNumberValue(element) {
 
 /*
  * =========================================================
- * PREVIOUS SHIFT CASH
+ * LOAD PREVIOUS SHIFT CASH
  * =========================================================
  */
 
@@ -156,6 +161,47 @@ async function loadPreviousShiftCash() {
 
 /*
  * =========================================================
+ * LOAD PREVIOUS SHIFT TRANSFER CASH
+ * =========================================================
+ */
+
+async function loadPreviousTransferCash() {
+  if (!startingCashInput) {
+    return;
+  }
+
+  if (!startingCashNote) {
+    return;
+  }
+
+  startingCashNote.textContent = "Loading previous shift transfer...";
+
+  try {
+    const response = await fetch("/previous-transfer-cash");
+
+    const result = await response.json();
+
+    if (!result.success) {
+      startingCashNote.textContent = result.message;
+
+      return;
+    }
+
+    startingCashInput.value = result.remaining_cash;
+
+    startingCashNote.textContent =
+      "Starting cash loaded from the previous shift transfer.";
+
+    startingCashInput.dispatchEvent(new Event("input"));
+  } catch (error) {
+    console.error(error);
+
+    startingCashNote.textContent = "Could not load previous shift transfer.";
+  }
+}
+
+/*
+ * =========================================================
  * CALCULATE ACTUAL CASH
  * =========================================================
  */
@@ -163,12 +209,16 @@ async function loadPreviousShiftCash() {
 function calculateActualCash() {
   let actualCash = 0;
 
-  const denominationInputs = document.querySelectorAll(".denomination-row");
+  const denominationRows = document.querySelectorAll(".denomination-row");
 
-  denominationInputs.forEach((row) => {
+  denominationRows.forEach((row) => {
     const denomination = parseFloat(row.dataset.denomination);
 
     const quantityInput = row.querySelector("input");
+
+    if (!quantityInput) {
+      return;
+    }
 
     const quantity = parseInt(quantityInput.value, 10);
 
@@ -288,10 +338,10 @@ function calculateRemit(actualCash) {
 
   const validationTotal = remit + remainingCash;
 
-  const difference = Math.abs(validationTotal - actualCash);
+  const validationDifference = Math.abs(validationTotal - actualCash);
 
   if (remitValidation) {
-    if (difference < 0.005) {
+    if (validationDifference < 0.005) {
       remitValidation.textContent = "✓ Remit + Remaining = Actual Cash";
     } else {
       remitValidation.textContent =
@@ -345,6 +395,26 @@ function updateCalculations() {
   calculateRemit(actualCash);
 
   calculateDifference(actualCash, expectedCash);
+}
+
+/*
+ * =========================================================
+ * TRANSFER VISIBILITY
+ * =========================================================
+ */
+
+function updateTransferVisibility() {
+  const transferSummary = document.querySelector(".transfer-summary");
+
+  if (!transferSummary) {
+    return;
+  }
+
+  if (countType && countType.value === "transfer") {
+    transferSummary.style.display = "block";
+  } else {
+    transferSummary.style.display = "none";
+  }
 }
 
 /*
@@ -473,7 +543,7 @@ denominationInputs.forEach((input) => {
 
 /*
  * =========================================================
- * STARTING CASH
+ * STARTING CASH INPUT
  * =========================================================
  */
 
@@ -483,7 +553,7 @@ if (startingCashInput) {
 
 /*
  * =========================================================
- * CASH SALES
+ * CASH SALES INPUT
  * =========================================================
  */
 
@@ -493,7 +563,7 @@ if (salesCashInput) {
 
 /*
  * =========================================================
- * REMAINING CASH
+ * REMAINING CASH INPUT
  * =========================================================
  */
 
@@ -509,11 +579,19 @@ if (remainingCashInput) {
 
 if (startingCashSource) {
   startingCashSource.addEventListener("change", async () => {
+    /*
+     * Previous Shift
+     */
+
     if (startingCashSource.value === "previous-shift") {
       await loadPreviousShiftCash();
 
       return;
     }
+
+    /*
+     * Previous Shift Transfer
+     */
 
     if (startingCashSource.value === "previous-transfer") {
       await loadPreviousTransferCash();
@@ -535,6 +613,12 @@ if (startingCashSource) {
   });
 }
 
+/*
+ * =========================================================
+ * COUNT TYPE
+ * =========================================================
+ */
+
 if (countType) {
   countType.addEventListener("change", () => {
     updateTransferVisibility();
@@ -542,13 +626,48 @@ if (countType) {
     updateCalculations();
   });
 }
+
+/*
+ * =========================================================
+ * GET DENOMINATION DATA
+ * =========================================================
+ */
+
+function getDenominationData() {
+  const denominations = [];
+
+  const rows = document.querySelectorAll(".denomination-row");
+
+  rows.forEach((row) => {
+    const denomination = parseFloat(row.dataset.denomination);
+
+    const input = row.querySelector("input");
+
+    if (!input) {
+      return;
+    }
+
+    const quantity = parseInt(input.value, 10);
+
+    if (Number.isFinite(denomination) && Number.isFinite(quantity)) {
+      denominations.push({
+        denomination: denomination,
+
+        quantity: quantity,
+
+        subtotal: denomination * quantity,
+      });
+    }
+  });
+
+  return denominations;
+}
+
 /*
  * =========================================================
  * SAVE CASH COUNT
  * =========================================================
  */
-
-const saveButton = document.getElementById("save-cash-count-button");
 
 if (saveButton) {
   saveButton.addEventListener("click", async () => {
@@ -569,13 +688,59 @@ if (saveButton) {
     const movements = calculateCashMovements();
 
     /*
-     * Make sure a shift exists.
+     * =================================================
+     * SHIFT VALIDATION
+     * =================================================
      */
 
     if (!currentShiftId) {
       alert("No open shift. Please open a shift first.");
 
       return;
+    }
+
+    /*
+     * =================================================
+     * GENERAL CASH VALIDATION
+     * =================================================
+     */
+
+    if (actualCash < 0) {
+      alert("Actual cash cannot be negative.");
+
+      return;
+    }
+
+    /*
+     * =================================================
+     * TRANSFER VALIDATION
+     * =================================================
+     */
+
+    if (countType && countType.value === "transfer") {
+      if (actualCash <= 0) {
+        alert("A Shift Transfer must have actual cash.");
+
+        return;
+      }
+
+      if (remainingCash < 0) {
+        alert("Remaining Cash cannot be negative.");
+
+        return;
+      }
+
+      if (remainingCash > actualCash) {
+        alert("Remaining Cash cannot be greater than Actual Cash.");
+
+        return;
+      }
+
+      if (remit < 0) {
+        alert("Remit cannot be negative.");
+
+        return;
+      }
     }
 
     saveButton.disabled = true;
@@ -638,57 +803,6 @@ if (saveButton) {
   });
 }
 
-/*
- * =========================================================
- * GET DENOMINATION DATA
- * =========================================================
- */
-
-function getDenominationData() {
-  const denominations = [];
-
-  const rows = document.querySelectorAll(".denomination-row");
-
-  rows.forEach((row) => {
-    const denomination = parseFloat(row.dataset.denomination);
-
-    const input = row.querySelector("input");
-
-    const quantity = parseInt(input.value, 10);
-
-    if (Number.isFinite(denomination) && Number.isFinite(quantity)) {
-      denominations.push({
-        denomination: denomination,
-
-        quantity: quantity,
-
-        subtotal: denomination * quantity,
-      });
-    }
-  });
-
-  return denominations;
-}
-
-/*
- * =========================================================
- * UPDATE TRANSFER VISIBILITY
- * =========================================================
- */
-
-function updateTransferVisibility() {
-  const transferSummary = document.querySelector(".transfer-summary");
-
-  if (!transferSummary) {
-    return;
-  }
-
-  if (countType && countType.value === "transfer") {
-    transferSummary.style.display = "block";
-  } else {
-    transferSummary.style.display = "none";
-  }
-}
 /*
  * =========================================================
  * INITIALIZE
